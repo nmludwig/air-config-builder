@@ -428,25 +428,11 @@ async function generate() {
   el.textContent = '';
   wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Fetch website content client-side (avoids server-side 403 blocks)
-  let siteContent = '[Website content could not be fetched]';
-  const targetUrl = document.getElementById('url').value.trim();
+  // Use pasted website content from field 3
   const pastedContent = document.getElementById('sitecontent').value.trim();
-  try {
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
-    const siteRes = await fetch(proxyUrl);
-    const siteJson = await siteRes.json();
-    if (siteJson.contents) {
-      // Strip HTML tags
-      const tmp = document.createElement('div');
-      tmp.innerHTML = siteJson.contents;
-      // Remove scripts and styles
-      tmp.querySelectorAll('script,style').forEach(el => el.remove());
-      siteContent = (tmp.innerText || tmp.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 12000);
-    }
-  } catch(e) {
-    console.warn('Could not fetch site:', e);
-  }
+  const siteContent = pastedContent.length > 20
+    ? pastedContent.slice(0, 15000)
+    : '[No website content pasted — SE must paste text from prospect website into field 3]';
 
   let fullText = '';
 
