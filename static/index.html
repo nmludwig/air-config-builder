@@ -242,7 +242,22 @@ For each call reason, determine:
 - Route: AIR routes immediately with no answer attempt (clinical symptoms, test results, legal matters, emergencies)
 
 STEP 3 — GENERATE THE COMPLETE AIR CONFIGURATION
-Produce ALL sections below. Every word must be specific to this business — use their real name, real services, real locations throughout. This goes straight into the RingCentral Admin Portal.
+Produce ALL sections below. Every word must be specific to this business — use their real name, real services, real locations throughout. Each section maps to an exact field in the RingCentral Admin Portal at service.ringcentral.com. The SE copies and pastes directly from your output into that field.
+
+ADMIN PORTAL FIELD MAP (where each section gets entered):
+- Section 1 → SE reference only, not entered into AIR
+- Section 2 → Phone System > AI > AI Receptionist > [name] > Company Info > Company Description (500 char max)
+- Section 3 → Phone System > AI > AI Receptionist > Knowledge Hub > Add Knowledge Base (add each URL; upload each document)
+- Section 4 → Phone System > AI > AI Receptionist > [name] > Skills > Custom Greeting > Business Hours text field
+- Section 5 → Phone System > AI > AI Receptionist > [name] > Skills > Custom Greeting > After Hours text field
+- Section 5b → SE reference — determines what goes in FAQ skill vs Knowledge Base vs Company Description guardrails
+- Section 6 → Phone System > AI > AI Receptionist > [name] > Skills > Frequently Asked Questions > Add (one entry per FAQ)
+- Section 7 → Phone System > AI > AI Receptionist > [name] > Skills > Transfer by Context > Add Rule (one rule per department)
+- Section 8 → Phone System > AI > AI Receptionist > [name] > Skills > Appointment Booking
+- Section 9 → Phone System > AI > AI Receptionist > [name] > Skills > Send Text Messages
+- Section 10 → SE follows step-by-step to configure everything above in order
+- Section 11 → SE review before go-live — deployment recommendations
+- Section 12 → SE review before go-live — apply persona improvements to FAQ answers and Company Description
 
 ---
 
