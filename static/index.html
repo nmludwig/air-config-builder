@@ -198,15 +198,24 @@ function buildPrompt() {
   const url = document.getElementById('url').value.trim();
   const questions = document.getElementById('questions').value.trim();
 
-  return `You are an expert RingCentral AI Receptionist (AIR) solutions engineer and a skilled web researcher.
+  return `You are an expert RingCentral AI Receptionist (AIR) solutions engineer.
 
 The user has provided:
 1. A company website: ${url}
 2. The top reasons customers call this business:
 ${questions}
 
-STEP 1 — RESEARCH THE BUSINESS
-Read the website URL provided. Extract everything needed to configure AIR:
+CRITICAL INSTRUCTION: Use ONLY the website URL provided above as your source of truth. Do NOT search the web, do NOT use prior knowledge about this business, do NOT find or reference any other website or location for this business. Everything you state about the practice — name, address, phone, hours, services — must come exclusively from ${url}.
+
+STEP 1 — USE THE WEBSITE CONTENT BELOW (ONLY THIS — DO NOT USE YOUR TRAINING DATA OR MEMORY)
+The following text was fetched directly from ${url}. Use ONLY this content for all practice details.
+Do NOT use your training data, prior knowledge, or any other source. If something is not in the text below, say it was not found on the website.
+
+=== WEBSITE CONTENT FROM ${url} ===
+__WEBSITE_CONTENT__
+=== END WEBSITE CONTENT ===
+
+Based SOLELY on the above content, extract:
 - Business name, industry, specialty
 - All office locations and addresses  
 - Phone number(s) and fax
@@ -229,7 +238,11 @@ Produce ALL sections below. Every word must be specific to this business — use
 ---
 
 ## 1. PRACTICE SUMMARY
-(What you learned from the website — name, locations, phone, hours, services, compliance context, recommended AIR persona name and tone)
+(What you learned from the website — business name, locations, phone, hours, services, compliance context)
+
+**Recommended AIR Persona Name:** Choose a first name that fits the practice location, patient demographics, brand tone, and cultural context of the area. Explain in 1-2 sentences WHY you chose it — cultural inclusivity, warmth, professionalism, regional fit, etc. Example: For a Bay Area surgical practice with diverse demographics, "Mei" is culturally inclusive, professional, and warm. The SE can override this if the customer prefers a different name.
+
+**Recommended Tone:** State the tone and why it fits this specific practice and patient population.
 
 ## 2. COMPANY DESCRIPTION
 (Admin Portal → AI Receptionist → Company Info)
@@ -287,6 +300,101 @@ Recommended setup, confirmation message template using the business name, any in
 Numbered step-by-step — the exact sequence to configure everything above in the Admin Portal. Reference specific values from each section at each step. An SE should be able to follow this list start to finish with zero guesswork.
 
 ---
+## 11. RECOMMENDATIONS TO MAKE AIR BETTER
+This is your consultant section. Based on everything you know about this practice, their website, their call reasons, and best practices for AIR deployments — what would make this AIR configuration go from good to exceptional?
+
+Cover ALL of the following angles:
+
+**Demographics & Language**
+Are there patient demographics (age, language, ethnicity, location) that suggest additional languages, a different tone, or specific accessibility considerations? Use the practice location to inform this.
+
+**Knowledge Base Gaps**
+What content is missing from their website that would make AIR smarter? What should the SE ask the office to provide?
+
+**Routing & Escalation Gaps**
+Are there call types that are not covered by the routing rules? After-hours escalation paths? On-call scenarios? Edge cases?
+
+**Skills Not Enabled (But Should Be)**
+Based on the call reasons and practice type, are there AIR skills that were not enabled but would clearly help? (e.g. SMS follow-up for appointment confirmations, lead capture for new patient intake)
+
+**Calendar & Booking Integration**
+Is the current booking system (if any) compatible with AIR native calendar integration? What would improve the booking experience?
+
+**AIR Pro Opportunity**
+Are any of the call reasons complex enough that AIR Pro (multi-step agentic workflows) would deliver significantly better outcomes than standard AIR? Be specific about which workflows and why.
+
+**Website Improvements That Help AIR**
+What changes to their website would make AIR smarter over time? (More FAQ content, clearer service pages, hours listed, etc.)
+
+**Demo Wow Moments**
+Based on this specific practice, what are the 2-3 most impressive things to show in a live demo? What will make the prospect say "I need this"?
+
+**Risk Flags**
+Are there anything in this practice's setup that could cause AIR to underperform — missing info, compliance gaps, routing dead ends? Flag them clearly so the SE can address them before go-live.
+
+Be specific, direct, and opinionated. This is where you add SE value beyond just filling in fields.
+
+---
+## 11. RECOMMENDATIONS TO MAKE THIS AIR DEPLOYMENT BETTER
+Consultant section — based on the practice, website, call reasons, and AIR best practices, what would make this deployment go from good to exceptional?
+
+**Demographics & Language**
+Are there patient demographics (age, language, ethnicity, location) suggesting additional languages, tone adjustments, or accessibility considerations? Use the practice location specifically.
+
+**Knowledge Base Gaps**
+What is missing from their website that would make AIR smarter? What should the SE ask the office to provide before go-live?
+
+**Routing & Escalation Gaps**
+Are there call types not covered? After-hours escalation paths? On-call scenarios? Edge cases the current rules miss?
+
+**Skills Not Enabled But Should Be**
+Based on call reasons and practice type, which disabled skills would clearly help? Be specific about why.
+
+**Calendar & Booking**
+Is the current booking system compatible with AIR native calendar integration? What would improve the booking experience?
+
+**AIR Pro Opportunity**
+Are any call reasons complex enough that AIR Pro would deliver significantly better outcomes? Which workflows and why?
+
+**Website Improvements That Help AIR**
+What website changes would make AIR smarter over time? More FAQ content, clearer service pages, hours listed, etc.
+
+**Risk Flags**
+What could cause AIR to underperform — missing info, compliance gaps, routing dead ends? Flag clearly so the SE can fix before go-live.
+
+---
+
+## 12. RECOMMENDATIONS TO MAKE [PERSONA NAME] BETTER
+Now focus specifically on improving the AI receptionist persona itself — not the configuration fields, but how Mei (or whatever name was chosen) actually performs in conversation.
+
+**Greeting Quality**
+Are the greetings too long, too short, too formal, too casual for this patient population? What specific words or phrases would land better?
+
+**FAQ Answer Quality**
+Review each FAQ answer you wrote. Which ones are weakest? Which are too long for voice (remember — AIR speaks these aloud)? Rewrite any that need improvement and explain why.
+
+**Voice & Tone Consistency**
+Is the tone consistent across all answers? Are there places where the persona sounds robotic, overly corporate, or inconsistent with the practice brand?
+
+**Non-Determinism Risk**
+Which FAQ answers are most at risk of AIR paraphrasing them incorrectly? Which should be moved from the Knowledge Base to the FAQ skill for exact-match determinism?
+
+**Company Description Punch**
+Is the company description doing its job — seeding good FAQs, setting behavioral guardrails, and representing the practice accurately in 500 chars? Suggest any improvements.
+
+**Escalation Phrasing**
+Review the route-only answers. Do they feel warm and reassuring, or abrupt? Rewrite any that could be improved.
+
+**What Mei Should Always Say**
+List 3-5 specific phrases or commitments Mei should always make — things that build trust and match the practice brand (e.g. "Dr. Liu personally reviews every case", "We always call back within one business day").
+
+**What Mei Should Never Say**
+List 5+ things Mei must never say — specific to this practice type (not just generic medical disclaimers, but practice-specific guardrails).
+
+**Demo Wow Moments**
+Based on this specific practice and persona, what are the 2-3 most impressive things to show in a live demo call? What will make the prospect say "I need this"?
+
+---
 Be thorough, specific, and production-ready. An SE will use this configuration live with a real customer today.`;
 }
 
@@ -317,7 +425,7 @@ async function generate() {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: buildPrompt() })
+      body: JSON.stringify({ prompt: buildPrompt(), url: document.getElementById('url').value.trim() })
     });
 
     if (!res.ok) throw new Error('Server returned ' + res.status);
