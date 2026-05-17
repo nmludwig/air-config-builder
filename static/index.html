@@ -419,13 +419,32 @@ async function generate() {
   el.textContent = '';
   wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
+  // Fetch website content client-side (avoids server-side 403 blocks)
+  let siteContent = '[Website content could not be fetched]';
+  const targetUrl = document.getElementById('url').value.trim();
+  try {
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+    const siteRes = await fetch(proxyUrl);
+    const siteJson = await siteRes.json();
+    if (siteJson.contents) {
+      // Strip HTML tags
+      const tmp = document.createElement('div');
+      tmp.innerHTML = siteJson.contents;
+      // Remove scripts and styles
+      tmp.querySelectorAll('script,style').forEach(el => el.remove());
+      siteContent = (tmp.innerText || tmp.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 12000);
+    }
+  } catch(e) {
+    console.warn('Could not fetch site:', e);
+  }
+
   let fullText = '';
 
   try {
-    const res = await fetch('/api/generate', {
+    btn.innerHTML = '<span class="spinner"></span>&nbsp; Generating config...'; const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: buildPrompt(), url: document.getElementById('url').value.trim() })
+      body: JSON.stringify({ prompt: buildPrompt().replace('__WEBSITE_CONTENT__', siteContent), url: ''  })
     });
 
     if (!res.ok) throw new Error('Server returned ' + res.status);
