@@ -301,35 +301,39 @@ List each prohibition rule and the exact phrase AIR will use when it hits that b
 
 ---
 
-## 4. FAQ SKILL ENTRIES — MAXIMUM 10
+## 4. FAQ SKILL ENTRIES — HARD LIMIT: EXACTLY 10, NO MORE
 **Field:** FAQ Skill | **Determinism:** HARD | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Frequently Asked Questions → Add
 
-⚠️ HARD DETERMINISTIC: AIR speaks these answers exactly. Write them to be spoken aloud. Maximum 20 seconds each. No routing answers here — those go in Transfer by Context.
+⚠️ STOP. COUNT YOUR FAQs. YOU MAY ONLY WRITE 10. NOT 11. NOT 12. NOT 20. EXACTLY 10 MAXIMUM.
 
-Only include questions AIR can fully answer from the website content or general practice knowledge. If a question requires system access, real-time data, or clinical judgment — it belongs in Transfer by Context, not here.
+RULE: FAQs are ONLY for questions AIR can answer completely from website content, with no system access, no clinical judgment, and no routing required. If the answer requires transferring the caller — it is NOT a FAQ. It goes in Section 5 (Transfer by Context). Do not add a "route" answer to the FAQ section. That is wrong.
 
-For each entry (max 10):
+Choose the 10 most important questions AIR can answer completely. Consolidate similar topics into one FAQ entry.
+
+For each entry:
 **FAQ [#]: [Topic]**
-Question variants (3 max — real caller phrasing):
+Question variants (3 max):
 - "..."
-- "..."
-- "..."
-Answer (exact text AIR speaks):
+Answer (exact text AIR speaks — under 20 seconds when read aloud):
 "..."
 
 ---
 
-## 5. TRANSFER BY CONTEXT RULES — MAXIMUM 10
+## 5. TRANSFER BY CONTEXT RULES — HARD LIMIT: EXACTLY 10, NO MORE
 **Field:** Transfer by Context | **Determinism:** SOFT | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Transfer by Context → Add Rule
 
-⚠️ This is where ALL routing lives — including sensitive call types that are prohibited from FAQ answers (post-op symptoms, test results, pricing, appointment confirmation, surgery scheduling). Each rule here is entered as a separate Add Rule in the Admin Portal.
+⚠️ STOP. THIS SECTION MUST CONTAIN BETWEEN 5 AND 10 RULES. THIS IS WHERE ALL ROUTING LIVES.
 
-For each rule (max 10):
+Every call reason that requires system access, clinical judgment, or real-time data goes HERE — not in FAQ. This includes: appointment confirmation, surgery cost, earlier availability, post-op symptoms, test results, surgery scheduling, insurance verification, and any other prohibited topic.
+
+Consolidate related routing into one rule where possible. Do not create a separate rule for every single question variant.
+
+For each rule:
 **Rule [#]: [Department Name]**
-Keywords: [15-20 natural caller phrases, comma separated — think like the caller, not the org chart]
-Route to: [Department — SE fills in actual extension]
-Covers: [which call reasons and prohibition topics this handles]
-Holding message AIR uses: "[exact phrase AIR says while transferring]"
+Keywords: [15-20 natural caller phrases, comma separated]
+Route to: [Department — SE fills in actual extension number]
+Covers: [which call reasons this handles]
+AIR holding message: "[exact phrase]"
 
 ---
 
