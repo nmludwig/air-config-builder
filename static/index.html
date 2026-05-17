@@ -135,6 +135,15 @@
       <div class="hint">Paste these directly from the prospect's staff email or notes. The more specific, the better the generated FAQs and routing rules.</div>
     </div>
 
+    <div class="field">
+      <div class="field-label">
+        <div class="field-num">3</div>
+        <label>Website content &nbsp;<span>— copy &amp; paste text from the prospect's website</span></label>
+      </div>
+      <textarea id="sitecontent" placeholder="Go to the prospect's website, select all text (Cmd+A), copy it (Cmd+C), and paste it here (Cmd+V). Or paste key pages like About, Services, and Contact. The more content you paste, the more accurate the configuration." style="min-height:160px"></textarea>
+      <div class="hint">This is your most important input — Claude uses this to learn the real business details. Paste from as many pages as you like.</div>
+    </div>
+
     <button class="gen-btn" id="genBtn" onclick="generate()">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       Generate AIR Configuration
@@ -422,6 +431,7 @@ async function generate() {
   // Fetch website content client-side (avoids server-side 403 blocks)
   let siteContent = '[Website content could not be fetched]';
   const targetUrl = document.getElementById('url').value.trim();
+  const pastedContent = document.getElementById('sitecontent').value.trim();
   try {
     const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
     const siteRes = await fetch(proxyUrl);
