@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIR Config Builder — RingCentral SE Team</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --navy:#1E3A5F;--blue:#0F62FE;--blue-lt:#EFF6FF;--blue-md:#DBEAFE;
+      --green:#166534;--grn-lt:#DCFCE7;--grn-bd:#BBF7D0;
+      --red:#991B1B;--red-lt:#FEE2E2;--red-bd:#FECACA;
+      --amber:#92400E;--amb-lt:#FEF3C7;--amb-bd:#FDE68A;
+      --gray:#F8FAFC;--gray2:#F1F5F9;--gray3:#E2E8F0;--gray4:#94A3B8;--gray5:#64748B;
+      --text:#0F172A;--text2:#334155;--text3:#64748B;
+      --border:#E2E8F0;--radius:10px;--radius-sm:6px;
+      --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+    }
+    body{font-family:'Inter',sans-serif;background:var(--gray);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6}
+
+    /* TOPBAR */
+    .topbar{background:var(--navy);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+    .brand{display:flex;align-items:center;gap:10px;color:white;text-decoration:none}
+    .brand-logo{width:30px;height:30px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white}
+    .brand-name{font-size:15px;font-weight:600;color:white}
+    .brand-sub{font-size:12px;color:rgba(255,255,255,0.45);margin-left:2px}
+    .topbar-pill{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-weight:500}
+
+    /* LAYOUT */
+    .layout{display:flex;min-height:calc(100vh - 56px)}
+
+    /* SIDEBAR */
+    .sidebar{width:224px;flex-shrink:0;background:white;border-right:1px solid var(--border);padding:1.5rem 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+    .sidebar-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray4);padding:0 1.25rem;margin-bottom:8px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 1.25rem;font-size:13px;color:var(--text3);cursor:pointer;border-left:3px solid transparent;transition:all .12s;user-select:none}
+    .nav-item:hover{background:var(--gray);color:var(--text2)}
+    .nav-item.active{color:var(--blue);background:var(--blue-lt);border-left-color:var(--blue);font-weight:500}
+    .nav-item.done{color:var(--green)}
+    .nav-icon{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+    .nav-item.done .nav-icon{background:var(--green);border-color:var(--green);color:white}
+    .nav-item.active .nav-icon{background:var(--blue);border-color:var(--blue);color:white}
+    .sidebar-footer{padding:1.5rem 1.25rem 0}
+    .prog-label{font-size:12px;color:var(--text3);display:flex;justify-content:space-between;margin-bottom:5px}
+    .prog-track{height:4px;background:var(--gray3);border-radius:2px;overflow:hidden}
+    .prog-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s}
+
+    /* MAIN */
+    .main{flex:1;padding:2rem 2.5rem;max-width:820px}
+
+    /* STEP HEADER */
+    .step-header{margin-bottom:1.75rem}
+    .step-tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--blue);margin-bottom:6px}
+    .step-title{font-size:22px;font-weight:600;color:var(--navy);margin-bottom:4px}
+    .step-desc{font-size:14px;color:var(--text3);max-width:560px}
+
+    /* CARDS */
+    .card{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+    .card-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:3px}
+    .card-sub{font-size:13px;color:var(--text3);margin-bottom:1.25rem}
+
+    /* FIELDS */
+    .field{margin-bottom:1rem}
+    .field:last-child{margin-bottom:0}
+    .field label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:5px}
+    .field label span{font-weight:400;color:var(--gray4);font-size:12px}
+    .field input,.field textarea,.field select{width:100%;padding:9px 12px;font-size:14px;font-family:'Inter',sans-serif;border:1px solid var(--border);border-radius:var(--radius-sm);background:white;color:var(--text);transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none}
+    .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(15,98,254,.1)}
+    .field textarea{resize:vertical;min-height:80px;line-height:1.6}
+    .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+    .field .hint{font-size:12px;color:var(--gray4);margin-top:4px}
+    .field .char-count{font-size:12px;color:var(--gray4);text-align:right;margin-top:3px}
+    .field .char-count.warn{color:#B45309}
+    .field .char-count.over{color:var(--red)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+    /* ALERTS */
+    .alert{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:1rem;line-height:1.5}
+    .alert-info{background:var(--blue-md);color:#1E40AF;border:1px solid #BFDBFE}
+    .alert-warn{background:var(--amb-lt);color:var(--amber);border:1px solid var(--amb-bd)}
+    .alert-danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bd)}
+    .alert-success{background:var(--grn-lt);color:var(--green);border:1px solid var(--grn-bd)}
+
+    /* REASON ITEMS */
+    .reason-grid{display:grid;gap:8px}
+    .reason-item{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--gray);transition:border-color .12s}
+    .reason-item:hover{border-color:var(--blue)}
+    .reason-num{width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:5px}
+    .reason-input{width:100%;border:none;background:transparent;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);padding:4px 0;outline:none;border-bottom:1px solid var(--border)}
+    .reason-input:focus{border-bottom-color:var(--blue)}
+    .reason-input::placeholder{color:var(--gray4)}
+    .reason-controls{display:flex;flex-direction:column;gap:4px;align-items:flex-end;padding-top:2px}
+    .type-btn{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;cursor:pointer;border:none;white-space:nowrap;letter-spacing:.02em;font-family:'Inter',sans-serif}
+    .type-faq{background:var(--grn-lt);color:var(--green)}
+    .type-partial{background:var(--amb-lt);color:var(--amber)}
+    .type-route{background:var(--red-lt);color:var(--red)}
+    .rm-btn{font-size:11px;padding:2px 7px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:white;color:var(--gray4);font-family:'Inter',sans-serif}
+    .rm-btn:hover{color:var(--red);border-color:var(--red-bd)}
+    .add-reason-btn{display:flex;align-items:center;gap:6px;margin-top:10px;padding:9px;font-size:13px;font-family:'Inter',sans-serif;color:var(--blue);border:1px dashed #93C5FD;border-radius:var(--radius-sm);background:var(--blue-lt);cursor:pointer;width:100%;justify-content:center;transition:background .12s}
+    .add-reason-btn:hover{background:var(--blue-md)}
+
+    /* TOGGLE */
+    .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
+    .toggle-row:last-child{border-bottom:none}
+    .toggle-label{font-size:13px;color:var(--text)}
+    .toggle-desc{font-size:12px;color:var(--gray4);margin-top:1px}
+    .toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0;position:absolute}
+    .toggle-slider{position:absolute;inset:0;background:var(--gray3);border-radius:11px;cursor:pointer;transition:background .2s}
+    .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:white;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+    .toggle input:checked+.toggle-slider{background:var(--blue)}
+    .toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:14px;font-family:'Inter',sans-serif;font-weight:500;border-radius:var(--radius-sm);cursor:pointer;border:1px solid var(--border);background:white;color:var(--text2);transition:all .12s;text-decoration:none}
+    .btn:hover{background:var(--gray2)}
+    .btn:active{transform:scale(.98)}
+    .btn-primary{background:var(--navy);color:white;border-color:var(--navy)}
+    .btn-primary:hover{background:#162d4a}
+    .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .btn-sm{padding:6px 12px;font-size:13px}
+
+    /* NAV */
+    .step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+    .step-counter{font-size:13px;color:var(--gray4)}
+
+    /* GENERATE */
+    .gen-hero{text-align:center;padding:3rem 2rem;background:white;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .gen-icon{width:56px;height:56px;background:var(--blue-lt);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:28px}
+    .gen-hero h2{font-size:20px;font-weight:600;color:var(--navy);margin-bottom:8px}
+    .gen-hero p{font-size:14px;color:var(--text3);max-width:460px;margin:0 auto 1.5rem;line-height:1.65}
+    .summary-pills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:1.5rem}
+    .pill{font-size:12px;padding:4px 12px;border-radius:20px;background:var(--gray2);color:var(--text3);border:1px solid var(--border)}
+    .pill strong{color:var(--text2)}
+
+    /* OUTPUT */
+    .output-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+    .output-toolbar h2{font-size:17px;font-weight:600;color:var(--navy)}
+    .output-block{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+    .output-block-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--gray2);border-bottom:1px solid var(--border)}
+    .output-block-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray5)}
+    .output-content{padding:1.25rem 1.5rem;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.8;color:var(--text2);white-space:pre-wrap;word-break:break-word;max-height:640px;overflow-y:auto}
+    .quick-actions{margin-top:1rem;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .quick-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:white;color:var(--text2);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;text-align:left;transition:all .12s}
+    .quick-btn:hover{background:var(--blue-lt);border-color:var(--blue);color:var(--blue)}
+
+    /* SPINNER */
+    .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .cursor-blink::after{content:'▋';animation:blink .9s infinite;color:var(--blue);font-style:normal}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+    .copy-btn{padding:5px 10px;font-size:12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:white;color:var(--text3);cursor:pointer;font-family:'Inter',sans-serif}
+    .copy-btn:hover{background:var(--gray2)}
+
+    @media(max-width:680px){.sidebar{display:none}.main{padding:1.25rem}.row{grid-template-columns:1fr}.quick-actions{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="brand">
+    <div class="brand-logo">RC</div>
+    <span class="brand-name">AIR Config Builder</span>
+    <span class="brand-sub">· SE Team Tool</span>
+  </div>
+  <span class="topbar-pill">RingCentral Internal · v1.0</span>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-label">Configuration Steps</div>
+    <div class="nav-item active" onclick="goStep(0)"><div class="nav-icon" id="ni-0">1</div>Practice Info</div>
+    <div class="nav-item" onclick="goStep(1)"><div class="nav-icon" id="ni-1">2</div>Call Reasons</div>
+    <div class="nav-item" onclick="goStep(2)"><div class="nav-icon" id="ni-2">3</div>Persona &amp; Greetings</div>
+    <div class="nav-item" onclick="goStep(3)"><div class="nav-icon" id="ni-3">4</div>Routing &amp; Skills</div>
+    <div class="nav-item" onclick="goStep(4)"><div class="nav-icon" id="ni-4">5</div>Generate</div>
+    <div class="sidebar-footer">
+      <div class="prog-label"><span>Progress</span><span id="progPct">0%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- STEP 0: PRACTICE INFO -->
+    <div id="step-0">
+      <div class="step-header">
+        <div class="step-tag">Step 1 of 5</div>
+        <h1 class="step-title">Practice information</h1>
+        <p class="step-desc">The foundation — used throughout the generated configuration for greetings, knowledge base, and company description.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Business details</div>
+        <div class="card-sub">Fill in as much as you have. The more detail, the richer the generated config.</div>
+        <div class="row">
+          <div class="field"><label>Practice / business name</label><input id="bizName" placeholder="e.g. Dr. Rockson Liu, MD, FACS"></div>
+          <div class="field"><label>Industry / specialty</label><input id="industry" placeholder="e.g. Hernia Surgery, Dental, Legal"></div>
+        </div>
+        <div class="field"><label>Website URL</label><input id="website" placeholder="https://"></div>
+        <div class="row">
+          <div class="field"><label>Main phone number</label><input id="phone" placeholder="(555) 555-5555"></div>
+          <div class="field"><label>City / region</label><input id="city" placeholder="e.g. Oakland, CA"></div>
+        </div>
+        <div class="field"><label>Office address(es) <span>— add all locations</span></label><input id="address" placeholder="365 Hawthorne Ave, Suite 101, Oakland CA 94609"></div>
+        <div class="row">
+          <div class="field"><label>Booking / scheduling URL <span>(optional)</span></label><input id="bookingUrl" placeholder="https://"></div>
+          <div class="field"><label>Fax <span>(optional)</span></label><input id="fax" placeholder="(555) 555-5555"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Key services</div>
+        <div class="card-sub">Main services or products — used to build knowledge base and FAQ generation.</div>
+        <div class="field"><textarea id="services" placeholder="e.g. Inguinal hernia repair, umbilical hernia repair, mesh removal, robotic-assisted minimally-invasive surgery..." rows="3"></textarea></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Compliance &amp; special requirements</div>
+        <div class="card-sub">Any context AIR must respect — shapes the guardrails in the generated config.</div>
+        <div class="field"><textarea id="compliance" placeholder="e.g. HIPAA-covered practice. Never provide medical advice. Always escalate clinical questions to staff..." rows="3"></textarea></div>
+      </div>
+    </div>
+
+    <!-- STEP 1: CALL REASONS -->
+    <div id="step-1" style="display:none">
+      <div class="step-header">
+        <div class="step-tag">Step 2 of 5</div>
+        <h1 class="step-title">Top call reasons</h1>
+        <p class="step-desc">Enter the real reasons customers call. Tag each — FAQ (AIR answers fully), Partial (explains + routes), Route (routes immediately, no answer).</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Call reasons</div>
+        <div class="card-sub">Pull these from the prospect's own staff — like Dr. Liu's office email. Specific = better config.</div>
+        <div class="alert alert-info">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><strong>FAQ</strong> = AIR fully answers &nbsp;·&nbsp; <strong>Partial</strong> = AIR gives context then routes &nbsp;·&nbsp; <strong>Route</strong> = routes immediately, no answer (use for clinical/legal/sensitive)</span>
+        </div>
+        <div class="reason-grid" id="reasonGrid"></div>
+        <button class="add-reason-btn" onclick="addReason()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add call reason
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title">Critical escalation rules</div>
+        <div class="card-sub">Call types that must NEVER be answered by AIR — always route to a human immediately with no attempt at an answer.</div>
+        <div class="field"><textarea id="criticalCalls" placeholder="e.g. Post-operative symptoms or complications, test/lab results, medical emergencies, active legal disputes, mental health crises..." rows="3"></textarea></div>
+        <div class="alert alert-danger" style="margin-bottom:0;margin-top:1rem">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>These become hard routing rules — AIR transfers immediately and never attempts to answer. This is a critical guardrail for healthcare, legal, and financial practices.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: PERSONA -->
+    <div id="step-2" style="display:none">
+      <div class="step-header">
+        <div class="step-tag">Step 3 of 5</div>
+        <h1 class="step-title">Persona &amp; greetings</h1>
+        <p class="step-desc">How AIR presents itself to callers — name, language, tone, and the exact words callers hear first.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">AIR profile</div>
+        <div class="card-sub">The receptionist's identity — set this to match the practice's brand and patient demographics.</div>
+        <div class="row">
+          <div class="field"><label>Receptionist name</label><input id="airName" placeholder="e.g. Mei, Alex, Jordan, Sam"></div>
+          <div class="field"><label>Tone / personality</label>
+            <select id="tone">
+              <option>Professional + Warm</option>
+              <option>Calm + Reassuring</option>
+              <option>Friendly + Energetic</option>
+              <option>Professional + Formal</option>
+              <option>Casual + Approachable</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Primary language</label>
+            <select id="primaryLang">
+              <option>English (US)</option><option>English (UK)</option><option>English (AU)</option>
+              <option>Spanish</option><option>French</option><option>French (Canadian)</option>
+              <option>German</option><option>Italian</option><option>Portuguese</option>
+            </select>
+          </div>
+          <div class="field"><label>Secondary language <span>(optional)</span></label>
+            <select id="secondLang">
+              <option value="">None</option>
+              <option>Spanish</option><option>French</option><option>French (Canadian)</option>
+              <option>German</option><option>Italian</option><option>Portuguese</option><option>English (US)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Company description</div>
+        <div class="card-sub">500 char max. This seeds the FAQ auto-generation and defines AIR's behavioral guardrails. Write it like a system prompt — who AIR is, what it does, what it should always/never do.</div>
+        <div class="field">
+          <textarea id="companyDesc" placeholder="Leave blank to auto-generate, or write your own. e.g. Dr. Rockson Liu, MD is a premier minimally-invasive hernia surgeon in Oakland, CA. Always offer to book a consultation. Never provide medical advice or diagnoses — connect callers to staff for clinical questions." rows="4" oninput="charCount(this,'descCount',500)" maxlength="520"></textarea>
+          <div class="char-count" id="descCount">0 / 500</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Greetings</div>
+        <div class="card-sub">Leave blank to auto-generate. Or write your own — AIR will say this word for word.</div>
+        <div class="field"><label>Business hours greeting</label><textarea id="greetingBiz" placeholder="Leave blank to auto-generate..." rows="3"></textarea></div>
+        <div class="field"><label>After-hours greeting</label><textarea id="greetingAH" placeholder="Leave blank to auto-generate. Note: for clinical practices, the AI will automatically add a 911/ER redirect in after-hours greetings." rows="3"></textarea></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: ROUTING -->
+    <div id="step-3" style="display:none">
+      <div class="step-header">
+        <div class="step-tag">Step 4 of 5</div>
+        <h1 class="step-title">Routing &amp; skills</h1>
+        <p class="step-desc">Where calls go when escalated, and which AIR skills to enable for this practice.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Call routing</div>
+        <div class="card-sub">Define the destinations AIR routes to — and the safety net if AIR can't resolve a call.</div>
+        <div class="field">
+          <label>Backup extension / fallback <span>— the safety net</span></label>
+          <input id="backupExt" placeholder="e.g. Front desk — ext 100. Must be a live person or queue, never voicemail alone.">
+          <div class="hint">Where calls go if AIR hits its limit, times out, or can't handle a request. This field is critical.</div>
+        </div>
+        <div class="field">
+          <label>Routing extensions &amp; departments</label>
+          <textarea id="extensions" placeholder="List departments and who handles what:&#10;Billing / Admin — ext 200&#10;Clinical Staff — ext 201&#10;Surgical Scheduling — ext 202&#10;Front Desk — ext 100" rows="5"></textarea>
+          <div class="hint">These become your Transfer by Context rules. One department per line.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Enabled skills</div>
+        <div class="card-sub">Toggle the skills this practice needs. The generated config will include setup instructions for each enabled skill.</div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Appointment booking</div><div class="toggle-desc">Google / Outlook calendar integration — real-time availability</div></div>
+          <label class="toggle"><input type="checkbox" id="sk-booking" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">SMS follow-up &amp; confirmations</div><div class="toggle-desc">Sends booking confirmations, intake links, follow-up texts</div></div>
+          <label class="toggle"><input type="checkbox" id="sk-sms" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Transfer by name</div><div class="toggle-desc">Callers can ask for specific staff by name — syncs with directory</div></div>
+          <label class="toggle"><input type="checkbox" id="sk-name" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Lead capture</div><div class="toggle-desc">Collects caller info with custom intake questions</div></div>
+          <label class="toggle"><input type="checkbox" id="sk-leads"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">CRM sync</div><div class="toggle-desc">Salesforce, HubSpot, or Zoho — auto-creates lead records</div></div>
+          <label class="toggle"><input type="checkbox" id="sk-crm"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Inbound SMS handling</div><div class="toggle-desc">AIR responds to text messages 24/7</div></div>
+          <label class="toggle"><input type="checkbox" id="sk-inboundsms"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Telehealth / video appointment links</div><div class="toggle-desc">Generates and texts RingCentral Video links during booking</div></div>
+          <label class="toggle"><input type="checkbox" id="sk-telehealth"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Multi-location routing</div><div class="toggle-desc">Routes callers to the right branch or office by location</div></div>
+          <label class="toggle"><input type="checkbox" id="sk-multiloc"><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Additional context for the AI</div>
+        <div class="card-sub">Anything else the generator should know — patient demographics, special situations, competitive context, demo focus areas.</div>
+        <div class="field"><textarea id="extraContext" placeholder="e.g. Many callers are elderly and need patience. Practice offers telehealth for out-of-state patients. Staff speak Spanish and English. This is a demo for a prospect in the healthcare vertical..." rows="3"></textarea></div>
+      </div>
+    </div>
+
+    <!-- STEP 4: GENERATE -->
+    <div id="step-4" style="display:none">
+      <div class="step-header">
+        <div class="step-tag">Step 5 of 5</div>
+        <h1 class="step-title">Generate configuration</h1>
+        <p class="step-desc">Review your inputs and generate the complete, copy-paste-ready AIR configuration.</p>
+      </div>
+      <div id="preGenerate">
+        <div class="gen-hero">
+          <div class="gen-icon">✦</div>
+          <h2>Ready to generate</h2>
+          <p>Claude will build your complete AIR configuration — company description, FAQs with exact answers, Transfer by Context routing rules with keyword lists, greetings, and an Admin Portal setup checklist.</p>
+          <div class="summary-pills" id="summaryPills"></div>
+          <button class="btn btn-primary" onclick="generate()" id="genBtn" style="font-size:15px;padding:11px 28px">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Generate AIR configuration
+          </button>
+          <div style="margin-top:10px;font-size:12px;color:var(--gray4)">Takes 20–40 seconds · Streams in as it's written</div>
+        </div>
+      </div>
+      <div id="outputArea" style="display:none"></div>
+    </div>
+
+    <!-- NAV -->
+    <div class="step-nav">
+      <button class="btn" id="backBtn" onclick="prevStep()" style="visibility:hidden">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back
+      </button>
+      <span class="step-counter" id="stepCounter">Step 1 of 5</span>
+      <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+        Next
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let currentStep = 0;
+const TOTAL = 5;
+
+const reasons = [
+  {text:'', type:'faq'},
+  {text:'', type:'faq'},
+  {text:'', type:'route'},
+];
+
+function renderReasons() {
+  const g = document.getElementById('reasonGrid');
+  g.innerHTML = '';
+  reasons.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = 'reason-item';
+    d.innerHTML = `
+      <div class="reason-num">${i+1}</div>
+      <input class="reason-input" placeholder="e.g. How much does surgery cost?" value="${r.text.replace(/"/g,'&quot;')}" oninput="reasons[${i}].text=this.value">
+      <div class="reason-controls">
+        <button class="type-btn type-${r.type}" onclick="cycleType(${i})">${r.type==='faq'?'FAQ':r.type==='partial'?'Partial':'Route'}</button>
+        ${reasons.length > 1 ? `<button class="rm-btn" onclick="removeReason(${i})">✕</button>` : ''}
+      </div>`;
+    g.appendChild(d);
+  });
+}
+
+function cycleType(i) {
+  const t = ['faq','partial','route'];
+  reasons[i].type = t[(t.indexOf(reasons[i].type)+1)%3];
+  renderReasons();
+}
+
+function removeReason(i) { reasons.splice(i,1); renderReasons(); }
+function addReason() { reasons.push({text:'',type:'faq'}); renderReasons(); }
+
+function charCount(el, id, max) {
+  const n = el.value.length;
+  const out = document.getElementById(id);
+  out.textContent = n + ' / ' + max;
+  out.className = 'char-count' + (n > max ? ' over' : n > max*0.9 ? ' warn' : '');
+}
+
+function goStep(n) {
+  document.getElementById('step-'+currentStep).style.display = 'none';
+  document.getElementById('step-'+n).style.display = 'block';
+  currentStep = n;
+  updateNav();
+  if (n === 4) buildSummary();
+  window.scrollTo(0,0);
+}
+function nextStep() { if (currentStep < TOTAL-1) goStep(currentStep+1); }
+function prevStep() { if (currentStep > 0) goStep(currentStep-1); }
+
+function updateNav() {
+  const pct = Math.round((currentStep/(TOTAL-1))*100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progPct').textContent = pct + '%';
+  document.getElementById('stepCounter').textContent = 'Step '+(currentStep+1)+' of '+TOTAL;
+  document.getElementById('backBtn').style.visibility = currentStep > 0 ? 'visible' : 'hidden';
+  document.getElementById('nextBtn').style.display = currentStep === TOTAL-1 ? 'none' : 'inline-flex';
+
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.classList.toggle('active', i === currentStep);
+    el.classList.toggle('done', i < currentStep);
+    const ico = document.getElementById('ni-'+i);
+    if (i < currentStep) ico.textContent = '✓';
+    else ico.textContent = i+1;
+  });
+}
+
+function buildSummary() {
+  const pills = document.getElementById('summaryPills');
+  const biz = document.getElementById('bizName').value;
+  const rCount = reasons.filter(r=>r.text).length;
+  const skills = ['sk-booking','sk-sms','sk-name','sk-leads','sk-crm','sk-inboundsms','sk-telehealth','sk-multiloc']
+    .filter(id => document.getElementById(id).checked).length;
+  pills.innerHTML = [
+    biz ? `<span class="pill"><strong>${biz}</strong></span>` : '',
+    rCount ? `<span class="pill"><strong>${rCount}</strong> call reasons</span>` : '',
+    `<span class="pill"><strong>${document.getElementById('airName').value||'Alex'}</strong> · ${document.getElementById('tone').value}</span>`,
+    `<span class="pill">${document.getElementById('primaryLang').value}</span>`,
+    `<span class="pill"><strong>${skills}</strong> skills enabled</span>`,
+  ].join('');
+}
+
+function getData() {
+  return {
+    bizName: document.getElementById('bizName').value,
+    industry: document.getElementById('industry').value,
+    website: document.getElementById('website').value,
+    phone: document.getElementById('phone').value,
+    city: document.getElementById('city').value,
+    address: document.getElementById('address').value,
+    bookingUrl: document.getElementById('bookingUrl').value,
+    fax: document.getElementById('fax').value,
+    services: document.getElementById('services').value,
+    compliance: document.getElementById('compliance').value,
+    reasons: reasons,
+    criticalCalls: document.getElementById('criticalCalls').value,
+    airName: document.getElementById('airName').value || 'Alex',
+    tone: document.getElementById('tone').value,
+    primaryLang: document.getElementById('primaryLang').value,
+    secondLang: document.getElementById('secondLang').value,
+    companyDesc: document.getElementById('companyDesc').value,
+    greetingBiz: document.getElementById('greetingBiz').value,
+    greetingAH: document.getElementById('greetingAH').value,
+    backupExt: document.getElementById('backupExt').value,
+    extensions: document.getElementById('extensions').value,
+    skills: {
+      booking: document.getElementById('sk-booking').checked,
+      sms: document.getElementById('sk-sms').checked,
+      name: document.getElementById('sk-name').checked,
+      leads: document.getElementById('sk-leads').checked,
+      crm: document.getElementById('sk-crm').checked,
+      inboundsms: document.getElementById('sk-inboundsms').checked,
+      telehealth: document.getElementById('sk-telehealth').checked,
+      multiloc: document.getElementById('sk-multiloc').checked,
+    },
+    extraContext: document.getElementById('extraContext').value,
+  };
+}
+
+function buildPrompt(d) {
+  const enabledSkills = Object.entries(d.skills).filter(([,v])=>v).map(([k])=>k).join(', ');
+  return `You are an expert RingCentral AI Receptionist (AIR) solutions engineer. Generate a complete, production-ready, copy-paste-ready AIR configuration for the following practice.
+
+PRACTICE:
+- Name: ${d.bizName}
+- Industry: ${d.industry}
+- Website: ${d.website}
+- Phone: ${d.phone}
+- Location: ${d.city}
+- Address: ${d.address}
+- Booking URL: ${d.bookingUrl}
+- Fax: ${d.fax}
+- Services: ${d.services}
+- Compliance / special requirements: ${d.compliance}
+- Additional context: ${d.extraContext}
+
+TOP CALL REASONS (tagged: FAQ=answer fully, PARTIAL=explain+route, ROUTE=route immediately no answer):
+${d.reasons.filter(r=>r.text).map((r,i)=>`${i+1}. [${r.type.toUpperCase()}] ${r.text}`).join('\n')}
+
+CRITICAL ESCALATION RULES (must always route, never answer):
+${d.criticalCalls}
+
+PERSONA:
+- AIR Name: ${d.airName}
+- Tone: ${d.tone}
+- Primary language: ${d.primaryLang}
+- Secondary language: ${d.secondLang || 'None'}
+- Company description: ${d.companyDesc ? `USE THIS (lightly polish if needed): "${d.companyDesc}"` : 'GENERATE ONE — 500 char max'}
+- Business hours greeting: ${d.greetingBiz ? `USE THIS: "${d.greetingBiz}"` : 'GENERATE ONE'}
+- After-hours greeting: ${d.greetingAH ? `USE THIS: "${d.greetingAH}"` : 'GENERATE ONE — include emergency guidance if this is a clinical practice'}
+
+ROUTING:
+- Backup extension: ${d.backupExt}
+- Departments/extensions: ${d.extensions}
+- Enabled skills: ${enabledSkills}
+
+---
+
+Generate the following sections. Be specific, practical, and ready to paste directly into the RingCentral Admin Portal.
+
+## 1. COMPANY DESCRIPTION
+Exact text to paste. 500 char max. Include: who they are, core service, behavioral guardrails (always offer to book, what AIR should never do). State exact character count after.
+
+## 2. BUSINESS HOURS GREETING
+Exact script AIR will say. Warm, professional. Includes AIR name, what it can help with, invites caller to speak.
+
+## 3. AFTER-HOURS GREETING
+Exact script. State hours are closed, what AIR can still do, emergency guidance if clinical.
+
+## 4. FAQ ENTRIES
+For each FAQ or PARTIAL call reason, write:
+
+**Q:** [2-4 question variants a real caller would actually say — different phrasings]
+**A:** [Exact answer AIR says — natural, warm, ends with offer to help or book]
+
+For ROUTE items, write only:
+**Q:** [trigger phrases]
+**A:** [one line: "I'm connecting you to our team right away. Please hold."]
+
+## 5. TRANSFER BY CONTEXT RULES
+For each routing destination:
+
+**Rule: [Department Name]**
+Keywords: [12-18 phrases callers actually say — comma separated]
+Route to: [Department / extension]
+Note: [One line — why this rule exists, call reason it covers]
+
+## 6. ADMIN PORTAL SETUP CHECKLIST
+Numbered step-by-step — exact sequence to configure this AIR in service.ringcentral.com. Reference specific values from above at each step. Include the enabled skills: ${enabledSkills}.
+
+Be thorough. An SE will use this configuration directly with a real customer.`;
+}
+
+async function generate() {
+  const d = getData();
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>&nbsp; Generating...';
+
+  document.getElementById('preGenerate').style.display = 'none';
+  const out = document.getElementById('outputArea');
+  out.style.display = 'block';
+  out.innerHTML = `
+    <div class="output-block">
+      <div class="output-block-hdr">
+        <span class="output-block-title">AIR Configuration — generating...</span>
+      </div>
+      <div class="output-content cursor-blink" id="streamOut"></div>
+    </div>`;
+
+  let fullText = '';
+  const streamEl = document.getElementById('streamOut');
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ prompt: buildPrompt(d) })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({error:'Server error'}));
+      throw new Error(err.error || 'Server error');
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value);
+      for (const line of chunk.split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.text) {
+            fullText += parsed.text;
+            streamEl.textContent = fullText;
+            streamEl.scrollTop = streamEl.scrollHeight;
+          }
+        } catch {}
+      }
+    }
+
+    streamEl.classList.remove('cursor-blink');
+
+    out.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--grn-lt);border:1px solid var(--grn-bd);border-radius:var(--radius-sm);margin-bottom:1rem;font-size:14px;color:var(--green);font-weight:500">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Configuration ready — ${d.bizName || 'Practice'}
+      </div>
+      <div class="output-toolbar">
+        <h2>Generated Configuration</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm" onclick="copyAll()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy all
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="resetForm()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+            New config
+          </button>
+        </div>
+      </div>
+      <div class="output-block">
+        <div class="output-block-hdr">
+          <span class="output-block-title">${d.bizName || 'Practice'} · AIR Configuration</span>
+          <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+        </div>
+        <div class="output-content" id="finalOut"></div>
+      </div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="refine('Rewrite all FAQ answers with a more empathetic, reassuring tone for anxious patients. Keep all facts identical.')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Soften tone for anxious patients
+        </button>
+        <button class="quick-btn" onclick="refine('Add 10 more keyword variations to every Transfer by Context routing rule. Focus on how callers naturally describe their need.')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Expand routing keywords
+        </button>
+        <button class="quick-btn" onclick="refine('Write a 4-step live demo script using this configuration — what the SE says, what they ask AIR, and what wow moment each interaction demonstrates.')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Generate demo script
+        </button>
+        <button class="quick-btn" onclick="refine('Add a post-launch monitoring section: weekly admin checklist, 30/60/90 day success metrics, and what good vs. concerning looks like in the analytics dashboard.')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Add success metrics
+        </button>
+      </div>`;
+
+    document.getElementById('finalOut').textContent = fullText;
+    window._configText = fullText;
+
+  } catch(e) {
+    out.innerHTML = `
+      <div class="alert alert-danger">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Error: ${e.message}. Check that the server has ANTHROPIC_API_KEY set.</span>
+      </div>`;
+    document.getElementById('preGenerate').style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate AIR configuration';
+  }
+}
+
+async function refine(instruction) {
+  if (!window._configText) return;
+  const out = document.getElementById('outputArea');
+  const prev = window._configText;
+
+  out.innerHTML = `
+    <div class="output-block">
+      <div class="output-block-hdr"><span class="output-block-title">Refining configuration...</span></div>
+      <div class="output-content cursor-blink" id="streamOut"></div>
+    </div>`;
+
+  let fullText = '';
+  const streamEl = document.getElementById('streamOut');
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt: `Here is an AIR configuration:\n\n${prev}\n\n---\n\nInstruction: ${instruction}\n\nOutput the complete updated configuration. Keep all sections present.` })
+    });
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      for (const line of decoder.decode(value).split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try { const p = JSON.parse(raw); if (p.text) { fullText += p.text; streamEl.textContent = fullText; streamEl.scrollTop = streamEl.scrollHeight; } } catch {}
+      }
+    }
+    streamEl.classList.remove('cursor-blink');
+    window._configText = fullText;
+
+    out.innerHTML = `
+      <div class="output-toolbar"><h2>Updated Configuration</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm" onclick="copyAll()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy all</button>
+          <button class="btn btn-sm btn-primary" onclick="resetForm()">New config</button>
+        </div>
+      </div>
+      <div class="output-block">
+        <div class="output-block-hdr"><span class="output-block-title">AIR Configuration</span><button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+        <div class="output-content" id="finalOut"></div>
+      </div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="refine('Rewrite all FAQ answers with a more empathetic, reassuring tone for anxious patients. Keep all facts identical.')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Soften tone</button>
+        <button class="quick-btn" onclick="refine('Add 10 more keyword variations to every Transfer by Context routing rule.')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Expand keywords</button>
+        <button class="quick-btn" onclick="refine('Write a 4-step live demo script using this configuration.')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Demo script</button>
+        <button class="quick-btn" onclick="refine('Add a post-launch monitoring section with weekly checklist and 30/60/90 day metrics.')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Add metrics</button>
+      </div>`;
+
+    document.getElementById('finalOut').textContent = fullText;
+  } catch(e) {
+    out.innerHTML = `<div class="alert alert-danger">Refinement failed: ${e.message}</div>`;
+  }
+}
+
+function copyAll() {
+  navigator.clipboard.writeText(window._configText||'');
+}
+
+function copyBlock(btn) {
+  const text = btn.parentElement.nextElementSibling.textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(()=>btn.textContent=orig, 2000);
+  });
+}
+
+function resetForm() {
+  goStep(0);
+  document.getElementById('outputArea').style.display = 'none';
+  document.getElementById('preGenerate').style.display = 'block';
+  const btn = document.getElementById('genBtn');
+  if (btn) { btn.disabled=false; btn.innerHTML='<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate AIR configuration'; }
+}
+
+renderReasons();
+updateNav();
+</script>
+</body>
+</html>
