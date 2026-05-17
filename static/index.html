@@ -207,235 +207,204 @@ function buildPrompt() {
   const url = document.getElementById('url').value.trim();
   const questions = document.getElementById('questions').value.trim();
 
-  return `You are an expert RingCentral AI Receptionist (AIR) solutions engineer.
+  return `You are an expert RingCentral AI Receptionist (AIR) solutions engineer with deep knowledge of how each AIR configuration field works technically.
 
 The user has provided:
-1. A company website: ${url}
-2. The top reasons customers call this business:
+1. Company website: ${url}
+2. Top call reasons:
 ${questions}
 
-CRITICAL INSTRUCTION: Use ONLY the website URL provided above as your source of truth. Do NOT search the web, do NOT use prior knowledge about this business, do NOT find or reference any other website or location for this business. Everything you state about the practice — name, address, phone, hours, services — must come exclusively from ${url}.
-
-STEP 1 — USE THE WEBSITE CONTENT BELOW (ONLY THIS — DO NOT USE YOUR TRAINING DATA OR MEMORY)
-The following text was fetched directly from ${url}. Use ONLY this content for all practice details.
-Do NOT use your training data, prior knowledge, or any other source. If something is not in the text below, say it was not found on the website.
-
-=== WEBSITE CONTENT FROM ${url} ===
+WEBSITE CONTENT (use ONLY this — do not use training data or memory about this business):
+=== START ===
 __WEBSITE_CONTENT__
-=== END WEBSITE CONTENT ===
+=== END ===
 
-Based SOLELY on the above content, extract:
-- Business name, industry, specialty
-- All office locations and addresses  
-- Phone number(s) and fax
-- Business hours
-- All services offered
-- Booking / scheduling URL if present
-- Any compliance context (healthcare = HIPAA, legal = attorney-client privilege, etc.)
-- Patient/customer demographics if inferable
-- Tone that matches the brand (clinical, warm, professional, etc.)
+---
 
-STEP 2 — ANALYZE THE CALL REASONS
-For each call reason, determine:
-- FAQ: AIR can fully answer from the website content
-- Partial: AIR gives context then routes to a human
-- Route: AIR routes immediately with no answer attempt (clinical symptoms, test results, legal matters, emergencies)
+DETERMINISM FRAMEWORK — understand this before generating anything:
 
-STEP 3 — GENERATE THE COMPLETE AIR CONFIGURATION
-Produce ALL sections below. Every word must be specific to this business — use their real name, real services, real locations throughout. Each section maps to an exact field in the RingCentral Admin Portal at service.ringcentral.com. The SE copies and pastes directly from your output into that field.
+There are 7 AIR configuration fields. Each has a different determinism level that determines how carefully the text must be written:
 
-ADMIN PORTAL FIELD MAP (where each section gets entered):
-- Section 1 → SE reference only, not entered into AIR
-- Section 2 → Phone System > AI > AI Receptionist > [name] > Company Info > Company Description (500 char max)
-- Section 3 → Phone System > AI > AI Receptionist > Knowledge Hub > Add Knowledge Base (add each URL; upload each document)
-- Section 4 → Phone System > AI > AI Receptionist > [name] > Skills > Custom Greeting > Business Hours text field
-- Section 5 → Phone System > AI > AI Receptionist > [name] > Skills > Custom Greeting > After Hours text field
-- Section 5b → SE reference — determines what goes in FAQ skill vs Knowledge Base vs Company Description guardrails
-- Section 6 → Phone System > AI > AI Receptionist > [name] > Skills > Frequently Asked Questions > Add (one entry per FAQ)
-- Section 7 → Phone System > AI > AI Receptionist > [name] > Skills > Transfer by Context > Add Rule (one rule per department)
-- Section 8 → Phone System > AI > AI Receptionist > [name] > Skills > Appointment Booking
-- Section 9 → Phone System > AI > AI Receptionist > [name] > Skills > Send Text Messages
-- Section 10 → SE follows step-by-step to configure everything above in order
-- Section 11 → SE review before go-live — deployment recommendations
-- Section 12 → SE review before go-live — apply persona improvements to FAQ answers and Company Description
+HARD DETERMINISTIC (AIR uses your exact text — every word matters):
+- Company Description: AIR reads this as its behavioral identity and guardrail system. 500 char max. Every sentence shapes every conversation.
+- Custom Greeting: AIR speaks this word-for-word on every call. Must sound natural spoken aloud.
+- FAQ Skill: AIR uses your exact answer text when a question matches. These are the most important answers to get right — AIR does not paraphrase them.
+
+SOFT DETERMINISTIC (you define rules, AIR executes them, slight variation in transitional phrasing is normal):
+- Transfer by Context: Keywords trigger routing. AIR may vary the transitional phrase slightly ("one moment" vs "please hold") but always routes correctly.
+- SMS Skill: Message templates you write. Delivery timing is rule-based.
+
+MIXED (you define structure, AIR generates natural language from your content — variation is expected and acceptable):
+- Knowledge Base: AIR retrieves chunks from your uploaded content and paraphrases to answer. Quality of answers depends entirely on quality of source content.
+- Lead Capture: You define intake questions. AIR generates conversational phrasing to ask them.
+
+---
+
+CONSTRAINTS:
+- FAQ entries: maximum 10. Choose the most important. Each answer must be speakable aloud in under 20 seconds.
+- Transfer by Context rules: maximum 10. Consolidate where possible.
+- Every section must explicitly label: the field name, its determinism level, and the exact Admin Portal path.
+- There is NO "Route Only FAQ" — routing goes in Transfer by Context, not FAQ skill. Do not confuse these.
+- Prohibition rules are NOT a separate field. They are embedded in the Company Description (hard deterministic) and enforced as Transfer by Context rules (soft deterministic).
+
+---
+
+ADMIN PORTAL PATH FOR EACH FIELD:
+- Company Description → service.ringcentral.com → Phone System → AI → AI Receptionist → [name] → Company Info
+- Custom Greeting → Phone System → AI → AI Receptionist → [name] → Skills → Custom Greeting
+- FAQ Skill → Phone System → AI → AI Receptionist → [name] → Skills → Frequently Asked Questions → Add
+- Transfer by Context → Phone System → AI → AI Receptionist → [name] → Skills → Transfer by Context → Add Rule
+- Knowledge Base → Phone System → AI → AI Receptionist → Knowledge Hub → Add Knowledge Base
+- SMS Skill → Phone System → AI → AI Receptionist → [name] → Skills → Send Text Messages
+- Lead Capture → Phone System → AI → AI Receptionist → [name] → Skills → Lead Capture
+
+---
+
+Now generate the complete AIR configuration in this exact structure:
 
 ---
 
 ## 1. PRACTICE SUMMARY
-(What you learned from the website — business name, locations, phone, hours, services, compliance context)
+What you extracted from the website content only. Business name, locations, phone, fax, services, hours (if listed), booking URL, compliance context, patient demographics, brand tone.
 
-**Recommended AIR Persona Name:** Choose a first name that fits the practice location, patient demographics, brand tone, and cultural context of the area. Explain in 1-2 sentences WHY you chose it — cultural inclusivity, warmth, professionalism, regional fit, etc. Example: For a Bay Area surgical practice with diverse demographics, "Mei" is culturally inclusive, professional, and warm. The SE can override this if the customer prefers a different name.
-
-**Recommended Tone:** State the tone and why it fits this specific practice and patient population.
-
-## 2. COMPANY DESCRIPTION
-(Admin Portal → AI Receptionist → Company Info)
-Exact text to paste. 500 character maximum. Must include: who they are, core service, always offer to book/schedule, explicit behavioral guardrails (what AIR must never do). State exact character count after.
-
-## 3. KNOWLEDGE BASE STRATEGY
-(Admin Portal → Knowledge Hub)
-List the exact URLs from their site to add, and any document types to request from the office. One line per source explaining what it contributes. Flag clearly what must NOT be uploaded (PHI, pricing, internal docs).
-
-## 4. BUSINESS HOURS GREETING
-(Admin Portal → Skills → Custom Greeting → Business Hours)
-Exact script. Warm, on-brand. States AIR's name, what it can help with, invites the caller to speak naturally.
-
-## 5. AFTER-HOURS GREETING
-(Admin Portal → Skills → Custom Greeting → After Hours)
-Exact script. States office is closed, what AIR can still do, and — if clinical or legal — a clear emergency redirect (911 / ER / crisis line).
-
-## 5b. DETERMINISM STRATEGY
-(This shapes how Section 6 is written and how the SE configures the FAQ vs Knowledge Base skills)
-
-For this practice, identify:
-
-**High-determinism facts (MUST go in FAQ skill — exact wording matters):**
-List the specific facts from this practice that AIR must always state correctly and consistently — prices, hours, addresses, insurance carriers, specific procedure names. These go in the FAQ skill because AIR uses your exact answer text, minimizing paraphrase variation.
-
-**Low-determinism content (Knowledge Base is fine):**
-List the topics where natural variation in phrasing is acceptable — general service descriptions, background on Dr. Liu, philosophy of care. These can live in the Knowledge Base as documents.
-
-**Prohibition rules — what AIR must NEVER say or do for this specific practice:**
-Go beyond generic HIPAA disclaimers. List 8-10 practice-specific things AIR must never say, never do, and never attempt — based on the call reasons, practice type, and compliance context. Examples: never quote a surgery price, never describe post-op symptoms as normal or abnormal, never confirm or deny a specific diagnosis, never recommend one mesh type over another without a consultation. These become the behavioral guardrails in the company description and Transfer by Context rules.
+Then:
+**Recommended AIR Persona Name:** [name]
+**Why:** [1-2 sentences — cultural fit, demographic reasoning, tone match for this specific practice and location]
+**Recommended Tone:** [1-2 sentences — why this tone fits this patient population]
 
 ---
 
-## 6. FAQ ENTRIES
-(Admin Portal → Skills → Frequently Asked Questions)
-For every FAQ and Partial call reason, write:
+## 2. COMPANY DESCRIPTION
+**Field:** Company Description | **Determinism:** HARD | **Path:** Phone System → AI → AI Receptionist → [name] → Company Info
+**Character limit:** 500 maximum
 
-Question variants (3-4 ways a real caller would phrase this):
-- "..."
-- "..."
-- "..."
+Write the exact text to paste. Structure it as:
+- Who Dr./practice is and what they do (1 sentence)
+- What AIR can help with (1 sentence)
+- Prohibition guardrails — what AIR must never do, specific to this practice (1 sentence, embedded naturally)
 
-Answer (exact text AIR speaks — natural, warm, accurate, ends with an offer to help further or book):
+State exact character count after.
+
+**Prohibition rules embedded here:**
+List each prohibition rule and the exact phrase AIR will use when it hits that boundary. These are HARD DETERMINISTIC — the company description trains AIR to say these things consistently.
+
+---
+
+## 3. CUSTOM GREETING
+**Field:** Custom Greeting | **Determinism:** HARD | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Custom Greeting
+
+### Business Hours Greeting:
+[Exact script — spoken aloud, natural, states AIR name, what it can help with, invites caller to speak]
+
+### After-Hours Greeting:
+[Exact script — states office closed, what AIR can still do, emergency redirect if clinical practice]
+
+---
+
+## 4. FAQ SKILL ENTRIES — MAXIMUM 10
+**Field:** FAQ Skill | **Determinism:** HARD | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Frequently Asked Questions → Add
+
+⚠️ HARD DETERMINISTIC: AIR speaks these answers exactly. Write them to be spoken aloud. Maximum 20 seconds each. No routing answers here — those go in Transfer by Context.
+
+Only include questions AIR can fully answer from the website content or general practice knowledge. If a question requires system access, real-time data, or clinical judgment — it belongs in Transfer by Context, not here.
+
+For each entry (max 10):
+**FAQ [#]: [Topic]**
+Question variants (3 max — real caller phrasing):
+- "..."
+- "..."
+- "..."
+Answer (exact text AIR speaks):
 "..."
 
 ---
 
-For Route call reasons, write only:
-Question variants: [the phrases that trigger this]
-Answer: "I want to make sure you get the right help — let me connect you with our team right now. Please hold just a moment."
+## 5. TRANSFER BY CONTEXT RULES — MAXIMUM 10
+**Field:** Transfer by Context | **Determinism:** SOFT | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Transfer by Context → Add Rule
 
-## 7. TRANSFER BY CONTEXT RULES
-(Admin Portal → Skills → Transfer by Context)
-For each department that receives calls:
+⚠️ This is where ALL routing lives — including sensitive call types that are prohibited from FAQ answers (post-op symptoms, test results, pricing, appointment confirmation, surgery scheduling). Each rule here is entered as a separate Add Rule in the Admin Portal.
 
-**Rule: [Department Name]**
-Keywords: [20+ natural phrases callers actually say — comma separated. Think like the caller, not the org chart.]
-Route to: [Department / extension placeholder]
-Covers: [which call reasons this handles]
+For each rule (max 10):
+**Rule [#]: [Department Name]**
+Keywords: [15-20 natural caller phrases, comma separated — think like the caller, not the org chart]
+Route to: [Department — SE fills in actual extension]
+Covers: [which call reasons and prohibition topics this handles]
+Holding message AIR uses: "[exact phrase AIR says while transferring]"
 
-## 8. APPOINTMENT BOOKING SETUP
-(Admin Portal → Skills → Appointment Booking)
-Calendar integration type to recommend, appointment types to create with suggested durations, SMS confirmation message text, fallback booking link.
+---
 
-## 9. SMS CONFIGURATION
-(Admin Portal → Skills → Send Text Messages)
-Recommended setup, confirmation message template using the business name, any inbound SMS handling notes.
+## 6. KNOWLEDGE BASE STRATEGY
+**Field:** Knowledge Base | **Determinism:** MIXED | **Path:** Phone System → AI → AI Receptionist → Knowledge Hub → Add Knowledge Base
+
+⚠️ MIXED DETERMINISM: AIR paraphrases content from the knowledge base — variation is normal and acceptable here. Use the Knowledge Base for background context, not for facts that must be stated exactly (those go in FAQ skill).
+
+URLs to add (each on its own line with what it contributes):
+Documents to request from the office (each with what it contributes):
+What must NOT be uploaded (and why):
+
+---
+
+## 7. APPOINTMENT BOOKING SETUP
+**Field:** SMS Skill + Appointment Booking | **Determinism:** SOFT | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Appointment Booking / Send Text Messages
+
+Calendar integration recommendation:
+Appointment types to create with suggested durations:
+SMS confirmation message template (exact text):
+Booking link to use if no calendar integration:
+
+---
+
+## 8. LEAD CAPTURE SETUP (if relevant to this practice)
+**Field:** Lead Capture | **Determinism:** MIXED | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Lead Capture
+
+Custom intake questions to configure (AIR will ask these conversationally):
+CRM sync recommendation:
+
+---
+
+## 9. DETERMINISM STRATEGY — SE REFERENCE
+Not entered into any field. SE reference only.
+
+**High-determinism facts (MUST go in FAQ skill — exact wording matters):**
+[List specific facts from this practice — addresses, phone, credentials, statistics, specific services]
+
+**Low-determinism content (Knowledge Base is fine — paraphrasing acceptable):**
+[List topics where variation is acceptable]
+
+**Non-determinism risk flags:**
+[Which FAQ answers are most at risk of AIR paraphrasing incorrectly? Flag them and explain why.]
+
+---
 
 ## 10. ADMIN PORTAL SETUP CHECKLIST
-(service.ringcentral.com)
-Numbered step-by-step — the exact sequence to configure everything above in the Admin Portal. Reference specific values from each section at each step. An SE should be able to follow this list start to finish with zero guesswork.
+Step-by-step sequence through service.ringcentral.com to configure everything above. Reference specific values from each section at each step. Number every step. An SE should be able to follow this start to finish with zero guesswork.
 
 ---
-## 11. RECOMMENDATIONS TO MAKE AIR BETTER
-This is your consultant section. Based on everything you know about this practice, their website, their call reasons, and best practices for AIR deployments — what would make this AIR configuration go from good to exceptional?
 
-Cover ALL of the following angles:
-
-**Demographics & Language**
-Are there patient demographics (age, language, ethnicity, location) that suggest additional languages, a different tone, or specific accessibility considerations? Use the practice location to inform this.
-
-**Knowledge Base Gaps**
-What content is missing from their website that would make AIR smarter? What should the SE ask the office to provide?
-
-**Routing & Escalation Gaps**
-Are there call types that are not covered by the routing rules? After-hours escalation paths? On-call scenarios? Edge cases?
-
-**Skills Not Enabled (But Should Be)**
-Based on the call reasons and practice type, are there AIR skills that were not enabled but would clearly help? (e.g. SMS follow-up for appointment confirmations, lead capture for new patient intake)
-
-**Calendar & Booking Integration**
-Is the current booking system (if any) compatible with AIR native calendar integration? What would improve the booking experience?
-
-**AIR Pro Opportunity**
-Are any of the call reasons complex enough that AIR Pro (multi-step agentic workflows) would deliver significantly better outcomes than standard AIR? Be specific about which workflows and why.
-
-**Website Improvements That Help AIR**
-What changes to their website would make AIR smarter over time? (More FAQ content, clearer service pages, hours listed, etc.)
-
-**Demo Wow Moments**
-Based on this specific practice, what are the 2-3 most impressive things to show in a live demo? What will make the prospect say "I need this"?
-
-**Risk Flags**
-Are there anything in this practice's setup that could cause AIR to underperform — missing info, compliance gaps, routing dead ends? Flag them clearly so the SE can address them before go-live.
-
-Be specific, direct, and opinionated. This is where you add SE value beyond just filling in fields.
-
----
 ## 11. RECOMMENDATIONS TO MAKE THIS AIR DEPLOYMENT BETTER
-Consultant section — based on the practice, website, call reasons, and AIR best practices, what would make this deployment go from good to exceptional?
-
-**Demographics & Language**
-Are there patient demographics (age, language, ethnicity, location) suggesting additional languages, tone adjustments, or accessibility considerations? Use the practice location specifically.
-
-**Knowledge Base Gaps**
-What is missing from their website that would make AIR smarter? What should the SE ask the office to provide before go-live?
-
-**Routing & Escalation Gaps**
-Are there call types not covered? After-hours escalation paths? On-call scenarios? Edge cases the current rules miss?
-
-**Skills Not Enabled But Should Be**
-Based on call reasons and practice type, which disabled skills would clearly help? Be specific about why.
-
-**Calendar & Booking**
-Is the current booking system compatible with AIR native calendar integration? What would improve the booking experience?
-
-**AIR Pro Opportunity**
-Are any call reasons complex enough that AIR Pro would deliver significantly better outcomes? Which workflows and why?
-
-**Website Improvements That Help AIR**
-What website changes would make AIR smarter over time? More FAQ content, clearer service pages, hours listed, etc.
-
-**Risk Flags**
-What could cause AIR to underperform — missing info, compliance gaps, routing dead ends? Flag clearly so the SE can fix before go-live.
+Consultant section. Based on the practice, call reasons, and AIR best practices:
+- Demographics & language gaps
+- Knowledge base gaps — what content is missing
+- Routing gaps — call types not covered
+- Skills not enabled but should be
+- AIR Pro opportunity — any workflows complex enough for AIR Pro?
+- Website improvements that would make AIR smarter
+- Risk flags — what could cause AIR to underperform before go-live
 
 ---
 
-## 12. RECOMMENDATIONS TO MAKE [PERSONA NAME] BETTER
-Now focus specifically on improving the AI receptionist persona itself — not the configuration fields, but how Mei (or whatever name was chosen) actually performs in conversation.
-
-**Greeting Quality**
-Are the greetings too long, too short, too formal, too casual for this patient population? What specific words or phrases would land better?
-
-**FAQ Answer Quality**
-Review each FAQ answer you wrote. Which ones are weakest? Which are too long for voice (remember — AIR speaks these aloud)? Rewrite any that need improvement and explain why.
-
-**Voice & Tone Consistency**
-Is the tone consistent across all answers? Are there places where the persona sounds robotic, overly corporate, or inconsistent with the practice brand?
-
-**Non-Determinism Risk**
-Which FAQ answers are most at risk of AIR paraphrasing them incorrectly? Which should be moved from the Knowledge Base to the FAQ skill for exact-match determinism?
-
-**Company Description Punch**
-Is the company description doing its job — seeding good FAQs, setting behavioral guardrails, and representing the practice accurately in 500 chars? Suggest any improvements.
-
-**Escalation Phrasing**
-Review the route-only answers. Do they feel warm and reassuring, or abrupt? Rewrite any that could be improved.
-
-**What Mei Should Always Say**
-List 3-5 specific phrases or commitments Mei should always make — things that build trust and match the practice brand (e.g. "Dr. Liu personally reviews every case", "We always call back within one business day").
-
-**What Mei Should Never Say**
-List 5+ things Mei must never say — specific to this practice type (not just generic medical disclaimers, but practice-specific guardrails).
-
-**Demo Wow Moments**
-Based on this specific practice and persona, what are the 2-3 most impressive things to show in a live demo call? What will make the prospect say "I need this"?
+## 12. RECOMMENDATIONS TO IMPROVE THE PERSONA
+Critique the configuration you just generated:
+- Greeting quality — right length and tone for voice?
+- FAQ answer quality — which answers are weakest? Which are too long to speak aloud?
+- Non-determinism risk — which FAQ answers are most likely to be paraphrased incorrectly by AIR?
+- What the persona should always say — 3-5 trust-building phrases specific to this practice
+- What the persona must never say — practice-specific, beyond the prohibition rules already listed
+- Demo wow moments — the 2-3 specific interactions that will make the prospect say "I need this"
 
 ---
-Complete ALL sections through Section 12. Do not stop early or abbreviate any section. An SE will use this configuration live with a real customer today.`;
+
+Complete ALL sections. Do not stop early. An SE will use this configuration live with a real customer today.`;
 }
 
 async function generate() {
