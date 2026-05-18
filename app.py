@@ -16,22 +16,26 @@ client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
 
 
 def fetch_via_jina(url):
-    """Fetch website content via Jina AI Reader — handles JS, bot detection, 403s."""
+    """Fetch website content via Jina AI Reader."""
     try:
         jina_url = f"https://r.jina.ai/{url}"
-        req = urllib.request.Request(
-            jina_url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (compatible; AIRConfigBuilder/1.0)",
-                "Accept": "text/plain",
-                "X-Return-Format": "markdown",
-            }
-        )
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            content = resp.read(80000).decode("utf-8", errors="replace")
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; AIRConfigBuilder/1.0)",
+            "Accept": "text/plain",
+            "X-Return-Format": "markdown",
+            "X-Remove-Selector": "nav,footer,header,.cookie-banner,#cookie-notice,.ads",
+        }
+        # Use API key if configured for higher rate limits
+        jina_key = os.environ.get("JINA_API_KEY", "")
+        if jina_key:
+            headers["Authorization"] = f"Bearer {jina_key}"
+
+        req = urllib.request.Request(jina_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            content = resp.read(100000).decode("utf-8", errors="replace")
             return content[:15000]
     except Exception as e:
-        return f"[Could not fetch website via Jina: {e}]"
+        return f"[Website fetch failed: {e}. SE should paste website content manually into field 3.]"
 
 
 @app.route("/")
@@ -57,15 +61,16 @@ def generate():
     if not isinstance(prompt, str) or len(prompt) > 40000:
         return jsonify({"error": "Invalid prompt"}), 400
 
-    # If prompt contains placeholder, fetch via Jina
-    # pasted_content takes priority; Jina is fallback
+    # Resolve website content
     if "__WEBSITE_CONTENT__" in prompt:
         url = data.get("url", "").strip()
         pasted = data.get("pasted", "").strip()
 
         if pasted and len(pasted) > 50:
+            # Pasted content takes priority
             site_content = pasted[:15000]
         elif url:
+            # Auto-fetch via Jina
             site_content = fetch_via_jina(url)
         else:
             site_content = "[No website content provided]"
