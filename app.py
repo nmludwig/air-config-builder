@@ -15,31 +15,48 @@ CORS(app)
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
 
 
-def fetch_via_jina(url):
-    """Fetch website content via Jina AI Reader. Returns None if site is bot-protected."""
-    try:
-        jina_url = f"https://r.jina.ai/{url}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; AIRConfigBuilder/1.0)",
-            "Accept": "text/plain",
-            "X-Return-Format": "markdown",
-            "X-Remove-Selector": "nav,footer,header,.cookie-banner,#cookie-notice,.ads",
-        }
-        jina_key = os.environ.get("JINA_API_KEY", "")
-        if jina_key:
-            headers["Authorization"] = f"Bearer {jina_key}"
+def fetch_via_firecrawl(url):
+    """Fetch website content via Firecrawl — handles Cloudflare, JS rendering, bot protection."""
+    api_key = os.environ.get("FIRECRAWL_API_KEY", "")
+    if not api_key:
+        return None, "FIRECRAWL_API_KEY not configured on server"
 
-        req = urllib.request.Request(jina_url, headers=headers)
-        with urllib.request.urlopen(req, timeout=25) as resp:
-            content = resp.read(100000).decode("utf-8", errors="replace")
-            # Detect CAPTCHA / bot protection pages
-            captcha_signals = ["captcha", "robot", "cloudflare", "challenge", "access denied", "just a moment", "enable javascript", "verify you are human"]
-            content_lower = content.lower()
-            if any(s in content_lower for s in captcha_signals) or len(content.strip()) < 200:
-                return None  # Signal to caller that site is protected
-            return content[:15000]
+    try:
+        payload = json.dumps({
+            "url": url,
+            "formats": ["markdown"],
+            "onlyMainContent": True,
+            "timeout": 20000
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.firecrawl.dev/v1/scrape",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST"
+        )
+
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+
+            if result.get("success") and result.get("data", {}).get("markdown"):
+                content = result["data"]["markdown"]
+                # Sanity check — detect if we got a CAPTCHA/block page anyway
+                block_signals = ["captcha", "just a moment", "enable javascript", "verify you are human", "access denied"]
+                if any(s in content.lower() for s in block_signals) or len(content.strip()) < 100:
+                    return None, "CAPTCHA_PROTECTED"
+                return content[:15000], None
+            else:
+                return None, result.get("error", "Firecrawl returned no content")
+
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        return None, f"Firecrawl error {e.code}: {body[:200]}"
     except Exception as e:
-        return None
+        return None, f"Fetch failed: {str(e)}"
 
 
 @app.route("/")
@@ -71,15 +88,28 @@ def generate():
         pasted = data.get("pasted", "").strip()
 
         if pasted and len(pasted) > 50:
-            # Pasted content takes priority
+            # Pasted content always takes priority
             site_content = pasted[:15000]
         elif url:
-            # Auto-fetch via Jina
-            fetched = fetch_via_jina(url)
-            if fetched is None:
-                # Site is bot-protected — tell the frontend
-                return jsonify({"error": "CAPTCHA_PROTECTED", "message": "This website is bot-protected (Cloudflare/CAPTCHA). Please go to the website, copy the text (Cmd+A, Cmd+C), and paste it into field 3."}), 422
-            site_content = fetched
+            # Auto-fetch via Firecrawl
+            content, error = fetch_via_firecrawl(url)
+            if content is None:
+                if error == "CAPTCHA_PROTECTED":
+                    return jsonify({
+                        "error": "CAPTCHA_PROTECTED",
+                        "message": "This website is bot-protected. Please open it in your browser, press Cmd+A then Cmd+C to copy all text, and paste it into field 3."
+                    }), 422
+                elif "FIRECRAWL_API_KEY not configured" in str(error):
+                    return jsonify({
+                        "error": "FIRECRAWL_NOT_CONFIGURED",
+                        "message": "Firecrawl API key not set. Please paste website content manually in field 3."
+                    }), 422
+                else:
+                    return jsonify({
+                        "error": "FETCH_FAILED",
+                        "message": f"Could not fetch website ({error}). Please paste website content manually in field 3."
+                    }), 422
+            site_content = content
         else:
             site_content = "[No website content provided]"
 
