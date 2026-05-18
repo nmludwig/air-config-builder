@@ -138,10 +138,10 @@
     <div class="field">
       <div class="field-label">
         <div class="field-num">3</div>
-        <label>Website content &nbsp;<span>— copy &amp; paste text from the prospect's website</span></label>
+        <label>Website content &nbsp;<span>— optional, but improves accuracy</span></label>
       </div>
-      <textarea id="sitecontent" placeholder="Go to the prospect's website, select all text (Cmd+A), copy it (Cmd+C), and paste it here (Cmd+V). Or paste key pages like About, Services, and Contact. The more content you paste, the more accurate the configuration." style="min-height:160px"></textarea>
-      <div class="hint">This is your most important input — Claude uses this to learn the real business details. Paste from as many pages as you like.</div>
+      <textarea id="sitecontent" placeholder="Optional — the app will automatically read the website URL above. Paste additional content here if you want to supplement: About page, Services page, Contact page, or any other key pages. The more you paste, the more accurate the configuration." style="min-height:120px"></textarea>
+      <div class="hint">If left blank, the app fetches the website automatically. Paste extra pages here to improve accuracy.</div>
     </div>
 
     <button class="gen-btn" id="genBtn" onclick="generate()">
@@ -442,11 +442,7 @@ async function generate() {
   el.textContent = '';
   wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Use pasted website content from field 3
-  const pastedContent = document.getElementById('sitecontent').value.trim();
-  const siteContent = pastedContent.length > 20
-    ? pastedContent.slice(0, 15000)
-    : '[No website content pasted — SE must paste text from prospect website into field 3]';
+  // Website fetching handled server-side via Jina AI Reader
 
   let fullText = '';
 
@@ -454,7 +450,7 @@ async function generate() {
     btn.innerHTML = '<span class="spinner"></span>&nbsp; Generating config...'; const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: buildPrompt().replace('__WEBSITE_CONTENT__', siteContent), url: ''  })
+      body: JSON.stringify({ prompt: buildPrompt(), url: document.getElementById('url').value.trim(), pasted: document.getElementById('sitecontent').value.trim() })
     });
 
     if (!res.ok) throw new Error('Server returned ' + res.status);

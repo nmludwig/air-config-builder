@@ -15,25 +15,23 @@ CORS(app)
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
 
 
-def fetch_website(url):
-    """Fetch website content, return text or error string."""
+def fetch_via_jina(url):
+    """Fetch website content via Jina AI Reader — handles JS, bot detection, 403s."""
     try:
+        jina_url = f"https://r.jina.ai/{url}"
         req = urllib.request.Request(
-            url,
-            headers={"User-Agent": "Mozilla/5.0 (compatible; AIRConfigBuilder/1.0)"}
+            jina_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; AIRConfigBuilder/1.0)",
+                "Accept": "text/plain",
+                "X-Return-Format": "markdown",
+            }
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            raw = resp.read(80000)  # cap at ~80KB
-            text = raw.decode("utf-8", errors="replace")
-            # strip obvious HTML tags roughly
-            import re
-            text = re.sub(r"<style[^>]*>.*?</style>", " ", text, flags=re.DOTALL)
-            text = re.sub(r"<script[^>]*>.*?</script>", " ", text, flags=re.DOTALL)
-            text = re.sub(r"<[^>]+>", " ", text)
-            text = re.sub(r"\s+", " ", text).strip()
-            return text[:12000]  # send first 12k chars to Claude
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            content = resp.read(80000).decode("utf-8", errors="replace")
+            return content[:15000]
     except Exception as e:
-        return f"[Could not fetch website: {e}]"
+        return f"[Could not fetch website via Jina: {e}]"
 
 
 @app.route("/")
@@ -56,13 +54,22 @@ def generate():
         return jsonify({"error": "Missing prompt"}), 400
 
     prompt = data["prompt"]
-    if not isinstance(prompt, str) or len(prompt) > 30000:
+    if not isinstance(prompt, str) or len(prompt) > 40000:
         return jsonify({"error": "Invalid prompt"}), 400
 
-    # If the prompt contains a URL to fetch, do it server-side
-    url = data.get("url", "").strip()
-    if url:
-        site_content = fetch_website(url)
+    # If prompt contains placeholder, fetch via Jina
+    # pasted_content takes priority; Jina is fallback
+    if "__WEBSITE_CONTENT__" in prompt:
+        url = data.get("url", "").strip()
+        pasted = data.get("pasted", "").strip()
+
+        if pasted and len(pasted) > 50:
+            site_content = pasted[:15000]
+        elif url:
+            site_content = fetch_via_jina(url)
+        else:
+            site_content = "[No website content provided]"
+
         prompt = prompt.replace("__WEBSITE_CONTENT__", site_content)
 
     def stream():
