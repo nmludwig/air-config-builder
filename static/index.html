@@ -465,15 +465,7 @@ async function generate() {
       btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate AIR Configuration';
       const field3 = document.getElementById('sitecontent');
       field3.style.borderColor = '#F59E0B';
-      field3.placeholder = '⚠️ This website is bot-protected and cannot be read automatically.
-
-Please:
-1. Open ' + document.getElementById('url').value + ' in a new tab
-2. Press Cmd+A (select all)
-3. Press Cmd+C (copy)
-4. Click back here and paste (Cmd+V)
-
-Then click Generate again.';
+      field3.placeholder = '⚠️ This website is bot-protected.\n\nPlease: (1) Open the URL in a new tab  (2) Press Cmd+A then Cmd+C to copy all text  (3) Paste here with Cmd+V  (4) Click Generate again.';
       field3.focus();
       document.getElementById('outputWrap').style.display = 'none';
       return;
