@@ -42,17 +42,13 @@ def fetch_via_firecrawl(url):
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read().decode("utf-8"))
 
-            print("Firecrawl result keys:", list(result.keys()))
-            print("Firecrawl success:", result.get("success"))
-            print("Firecrawl data keys:", list(result.get("data", {}).keys()) if result.get("data") else "no data")
-            md = result.get("data", {}).get("markdown", "")
-            print("Markdown length:", len(md))
-            print("Markdown preview:", repr(md[:200]))
             if result.get("success") and result.get("data", {}).get("markdown"):
                 content = result["data"]["markdown"]
-                # Sanity check — detect if we got a CAPTCHA/block page anyway
-                block_signals = ["captcha", "just a moment", "enable javascript", "verify you are human", "access denied"]
-                if any(s in content.lower() for s in block_signals) or len(content.strip()) < 100:
+                # Only flag genuine block pages — not cookie banners or normal pages
+                # Require multiple signals AND very short content to avoid false positives
+                hard_block_signals = ["verify you are human", "just a moment...", "enable javascript and cookies to continue"]
+                is_hard_block = any(s in content.lower() for s in hard_block_signals) and len(content.strip()) < 500
+                if is_hard_block:
                     return None, "CAPTCHA_PROTECTED"
                 return content[:15000], None
             else:
