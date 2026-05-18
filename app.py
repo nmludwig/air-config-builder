@@ -42,6 +42,12 @@ def fetch_via_firecrawl(url):
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read().decode("utf-8"))
 
+            print("Firecrawl result keys:", list(result.keys()))
+            print("Firecrawl success:", result.get("success"))
+            print("Firecrawl data keys:", list(result.get("data", {}).keys()) if result.get("data") else "no data")
+            md = result.get("data", {}).get("markdown", "")
+            print("Markdown length:", len(md))
+            print("Markdown preview:", repr(md[:200]))
             if result.get("success") and result.get("data", {}).get("markdown"):
                 content = result["data"]["markdown"]
                 # Sanity check — detect if we got a CAPTCHA/block page anyway
