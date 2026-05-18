@@ -458,6 +458,26 @@ async function generate() {
       body: JSON.stringify({ prompt: buildPrompt(), url: document.getElementById('url').value.trim(), pasted: document.getElementById('sitecontent').value.trim() })
     });
 
+    if (res.status === 422) {
+      const err = await res.json();
+      // Show inline message in field 3
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate AIR Configuration';
+      const field3 = document.getElementById('sitecontent');
+      field3.style.borderColor = '#F59E0B';
+      field3.placeholder = '⚠️ This website is bot-protected and cannot be read automatically.
+
+Please:
+1. Open ' + document.getElementById('url').value + ' in a new tab
+2. Press Cmd+A (select all)
+3. Press Cmd+C (copy)
+4. Click back here and paste (Cmd+V)
+
+Then click Generate again.';
+      field3.focus();
+      document.getElementById('outputWrap').style.display = 'none';
+      return;
+    }
     if (!res.ok) throw new Error('Server returned ' + res.status);
 
     const reader = res.body.getReader();

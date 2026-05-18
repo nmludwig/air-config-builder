@@ -16,7 +16,7 @@ client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
 
 
 def fetch_via_jina(url):
-    """Fetch website content via Jina AI Reader."""
+    """Fetch website content via Jina AI Reader. Returns None if site is bot-protected."""
     try:
         jina_url = f"https://r.jina.ai/{url}"
         headers = {
@@ -25,7 +25,6 @@ def fetch_via_jina(url):
             "X-Return-Format": "markdown",
             "X-Remove-Selector": "nav,footer,header,.cookie-banner,#cookie-notice,.ads",
         }
-        # Use API key if configured for higher rate limits
         jina_key = os.environ.get("JINA_API_KEY", "")
         if jina_key:
             headers["Authorization"] = f"Bearer {jina_key}"
@@ -33,9 +32,14 @@ def fetch_via_jina(url):
         req = urllib.request.Request(jina_url, headers=headers)
         with urllib.request.urlopen(req, timeout=25) as resp:
             content = resp.read(100000).decode("utf-8", errors="replace")
+            # Detect CAPTCHA / bot protection pages
+            captcha_signals = ["captcha", "robot", "cloudflare", "challenge", "access denied", "just a moment", "enable javascript", "verify you are human"]
+            content_lower = content.lower()
+            if any(s in content_lower for s in captcha_signals) or len(content.strip()) < 200:
+                return None  # Signal to caller that site is protected
             return content[:15000]
     except Exception as e:
-        return f"[Website fetch failed: {e}. SE should paste website content manually into field 3.]"
+        return None
 
 
 @app.route("/")
@@ -71,7 +75,11 @@ def generate():
             site_content = pasted[:15000]
         elif url:
             # Auto-fetch via Jina
-            site_content = fetch_via_jina(url)
+            fetched = fetch_via_jina(url)
+            if fetched is None:
+                # Site is bot-protected — tell the frontend
+                return jsonify({"error": "CAPTCHA_PROTECTED", "message": "This website is bot-protected (Cloudflare/CAPTCHA). Please go to the website, copy the text (Cmd+A, Cmd+C), and paste it into field 3."}), 422
+            site_content = fetched
         else:
             site_content = "[No website content provided]"
 
