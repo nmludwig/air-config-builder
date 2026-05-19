@@ -294,30 +294,49 @@ Complete these fields in order at service.ringcentral.com → Phone System → A
 ## 2.2 Company Description
 (Admin Portal → Company Info → Company Description field — 500 character max — HARD DETERMINISTIC)
 
-CRITICAL FIELD — seeds FAQ auto-generation and sets all behavioral guardrails. Copy exactly:
+CRITICAL FIELD — this is AIR's core identity and seeds the FAQ auto-generation. 500 characters max. Copy exactly:
 
-[Copy box with exact 500-char text]
+Write the company description as a SYSTEM PROMPT for AIR — not marketing copy for patients. Follow this EXACT structure from the original Dr. Liu playbook:
+
+1. One sentence: who the doctor/business is and their specialty (use name, credentials, location)
+2. One sentence: "Always offer to book a consultation." (behavioral instruction)
+3. One sentence: list what to route to staff — "For [topic 1], [topic 2], [topic 3], connect the caller with our staff." (routing instruction)
+4. Final sentence: "Never provide medical advice." or equivalent prohibition (hard guardrail)
+
+DO NOT include addresses, phone numbers, or patient-facing marketing language. This text is read by AIR to understand its role — it is NOT shown to callers.
+
+Example of correct format (Dr. Liu):
+"Dr. Rockson Liu, MD, FACS is a premier minimally-invasive hernia surgeon in Oakland and Berkeley, CA. He performs robotics-assisted repairs for all hernia types. Always offer to book a consultation. For insurance, billing, surgery scheduling, post-op concerns, or test results, connect the caller with our staff. Never provide medical advice."
+
+[COPY BOX: exact text following the structure above — specific to this practice, under 500 characters]
 
 Character count: [N]/500
 
-**Prohibition rules embedded in this description:**
+**Prohibition rules embedded:**
 - [prohibition 1] → "[exact phrase AIR says]"
 - [prohibition 2] → "[exact phrase AIR says]"
-- [prohibition 3] → "[exact phrase AIR says]"
 
-[Success callout: "✓ | Why this works: [explain what the description does for AIR]"]
+✓ | Why this description works: It tells AIR: (1) who [practice name] is, (2) their core offer, (3) always push toward booking, (4) explicit routing instructions for sensitive topics, (5) hard medical advice guardrail — this reduces hallucination risk on clinical questions.
 
 ## 2.3 Business Hours Greeting
 (Admin Portal → Skills → Custom Greeting → Business Hours — HARD DETERMINISTIC)
 
-[Dark copy box with greeting text]
+Write the exact script. Follow this structure EXACTLY — do not deviate:
+"Thank you for calling [practice name]. I'm [AIR name], your AI assistant. I can help you [list 3-4 specific things AIR can do for this practice — schedule appointments, answer questions about services, provide office information, connect you with our team]. How can I help you today?"
+
+DO NOT mention the doctor's credentials or marketing copy in the greeting. The caller already called — they know who the doctor is. Just tell them what AIR can do.
+
+DARK_BOX: "[exact greeting script]"
 
 ## 2.4 After-Hours Greeting
 (Admin Portal → Skills → Custom Greeting → After Hours — HARD DETERMINISTIC)
 
-[Dark copy box with greeting text]
+Write the exact script. Follow this structure EXACTLY:
+"Thank you for calling [practice name]. I'm [AIR name], your AI assistant. Our office is currently closed. [What AIR can still do after hours]. [Emergency redirect if clinical practice — always include for healthcare: 'For urgent medical concerns, please call 911 or go to your nearest emergency room.']. How can I help you?"
 
-[Warning callout if clinical practice: "! | After-hours safety: [note about emergency redirect]"]
+DARK_BOX: "[exact after-hours script]"
+
+[Warning callout: "! | After-hours safety: [note about emergency redirect importance for this practice type]"]
 
 ## 2.5 Knowledge Base Strategy
 (Admin Portal → Knowledge Hub → Add Knowledge Base — MIXED DETERMINISTIC)
