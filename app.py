@@ -132,6 +132,50 @@ def generate():
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+@app.route("/api/export", methods=["POST"])
+def export_docx():
+    import subprocess, tempfile, os as _os
+    data = request.get_json(silent=True)
+    if not data or "content" not in data:
+        return jsonify({"error": "Missing content"}), 400
+
+    biz_name = data.get("bizName", "Practice")
+    prepared_by = data.get("preparedBy", "RingCentral SE")
+    content_text = data.get("content", "")
+
+    # Write input JSON to temp file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        import json as _json
+        _json.dump({"bizName": biz_name, "content": content_text, "preparedBy": prepared_by}, f)
+        input_path = f.name
+
+    output_path = input_path.replace('.json', '.docx')
+
+    try:
+        # Find the generator script
+        script_path = _os.path.join(_os.path.dirname(__file__), 'generate_docx.js')
+        result = subprocess.run(
+            ['node', script_path, input_path, output_path],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode != 0:
+            return jsonify({"error": "Doc generation failed", "detail": result.stderr}), 500
+
+        with open(output_path, 'rb') as f:
+            docx_bytes = f.read()
+
+        safe_name = biz_name.replace(' ', '_').replace('/', '_')[:40]
+        return Response(
+            docx_bytes,
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            headers={'Content-Disposition': f'attachment; filename="AIR_Config_{safe_name}.docx"'}
+        )
+    finally:
+        for p in [input_path, output_path]:
+            try: _os.unlink(p)
+            except: pass
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)

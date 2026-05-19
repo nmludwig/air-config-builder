@@ -2,9 +2,11 @@ services:
   - type: web
     name: air-config-builder
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && npm install -g docx
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: ANTHROPIC_API_KEY
-        sync: false   # You paste this in Render dashboard — never committed to git
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
     autoDeploy: true
