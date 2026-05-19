@@ -356,17 +356,21 @@ DARK_BOX: "[exact after-hours script]"
 ## 3.1 FAQ Entries — Maximum 10
 (Admin Portal → Skills → Frequently Asked Questions → Add — HARD DETERMINISTIC)
 
-Enter each Q&A pair in the FAQ skill. Left column = question variants. Right column = exact answer AIR will speak.
+Enter each Q&A pair in the FAQ skill. Left column = question variants callers say. Right column = exact text AIR speaks.
 
-[For each FAQ, use EXACTLY this format:]
+CRITICAL: Number each FAQ entry using the EXACT call reason number from the user\'s list above. If call reason #4 is "What kind of mesh does Dr. Liu use?" then the FAQ heading must be "Call Reason 4 — Mesh Type". Do not invent new numbering or generic topic names.
 
-### Call Reason [N] — [Topic Name]
+Only include call reasons AIR can FULLY answer without system access or clinical judgment. Call reasons requiring routing (post-op symptoms, test results, surgery scheduling status, appointment confirmation) go in Transfer by Context — NOT here.
+
+For EACH FAQ entry use EXACTLY this format — no variations:
+
+### Call Reason [N] — [Short Topic Name matching call reason N from the user\'s list]
 
 | QUESTION (what caller says) | ANSWER (what AIR says — copy exactly) |
 |---|---|
-| [variant 1] / [variant 2] / [variant 3] | [exact answer text — natural, warm, under 20 seconds spoken aloud] |
+| [3-5 natural caller phrasings separated by " / "] | [exact answer AIR speaks — natural, warm, ends with offer to help or book. Under 20 seconds aloud.] |
 
-[Repeat for each FAQ — max 10]
+[Repeat for each FAQ — max 10 total]
 
 ## 3.2 Transfer by Context Rules
 (Admin Portal → Skills → Transfer by Context → Add Rule — SOFT DETERMINISTIC)
