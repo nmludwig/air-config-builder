@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import urllib.request
 import urllib.error
 from flask import Flask, request, Response, send_from_directory, jsonify
@@ -134,49 +135,28 @@ def generate():
 
 @app.route("/api/export", methods=["POST"])
 def export_docx():
-    import subprocess, tempfile, os as _os
+    from docx_generator import generate_docx
     data = request.get_json(silent=True)
     if not data or "content" not in data:
         return jsonify({"error": "Missing content"}), 400
 
-    biz_name = data.get("bizName", "Practice")
+    biz_name = data.get("bizName", "Practice").replace('**', '').replace('*', '').strip()
     prepared_by = data.get("preparedBy", "RingCentral SE")
     content_text = data.get("content", "")
 
-    # Write input JSON to temp file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        import json as _json
-        _json.dump({"bizName": biz_name, "content": content_text, "preparedBy": prepared_by}, f)
-        input_path = f.name
-
-    output_path = input_path.replace('.json', '.docx')
-
     try:
-        # Find the generator script
-        base_dir = _os.path.dirname(_os.path.abspath(__file__))
-        script_path = _os.path.join(base_dir, 'generate_docx.js')
-        env = _os.environ.copy()
-        env['NODE_PATH'] = _os.path.join(base_dir, 'node_modules')
-        result = subprocess.run(
-            ['node', script_path, input_path, output_path],
-            capture_output=True, text=True, timeout=30, env=env
-        )
-        if result.returncode != 0:
-            return jsonify({"error": "Doc generation failed", "detail": result.stderr}), 500
-
-        with open(output_path, 'rb') as f:
-            docx_bytes = f.read()
-
-        safe_name = biz_name.replace(' ', '_').replace('/', '_')[:40]
+        docx_bytes = generate_docx(biz_name, content_text, prepared_by)
+        safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', biz_name)[:40]
         return Response(
             docx_bytes,
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             headers={'Content-Disposition': f'attachment; filename="AIR_Config_{safe_name}.docx"'}
         )
-    finally:
-        for p in [input_path, output_path]:
-            try: _os.unlink(p)
-            except: pass
+    except Exception as e:
+        import traceback
+        print("Export error:", traceback.format_exc())
+        return jsonify({"error": "Doc generation failed", "detail": str(e)}), 500
+
 
 
 if __name__ == "__main__":
