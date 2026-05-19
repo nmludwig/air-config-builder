@@ -592,7 +592,7 @@ async function exportDocx() {
   btn.disabled = true;
 
   try {
-    const bizName = document.getElementById('outputTitle').textContent.replace(' — AIR Configuration','').trim();
+    const bizName = document.getElementById('outputTitle').textContent.replace(' — AIR Configuration','').replace(/\*\*/g,'').trim();
     const res = await fetch('/api/export', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},

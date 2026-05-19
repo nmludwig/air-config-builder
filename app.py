@@ -153,10 +153,13 @@ def export_docx():
 
     try:
         # Find the generator script
-        script_path = _os.path.join(_os.path.dirname(__file__), 'generate_docx.js')
+        base_dir = _os.path.dirname(_os.path.abspath(__file__))
+        script_path = _os.path.join(base_dir, 'generate_docx.js')
+        env = _os.environ.copy()
+        env['NODE_PATH'] = _os.path.join(base_dir, 'node_modules')
         result = subprocess.run(
             ['node', script_path, input_path, output_path],
-            capture_output=True, text=True, timeout=30
+            capture_output=True, text=True, timeout=30, env=env
         )
         if result.returncode != 0:
             return jsonify({"error": "Doc generation failed", "detail": result.stderr}), 500
