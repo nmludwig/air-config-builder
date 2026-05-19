@@ -211,227 +211,191 @@ function buildPrompt() {
   const url = document.getElementById('url').value.trim();
   const questions = document.getElementById('questions').value.trim();
 
-  return `You are an expert RingCentral AI Receptionist (AIR) solutions engineer with deep knowledge of how each AIR configuration field works technically.
+  return `You are an expert RingCentral AI Receptionist (AIR) solutions engineer.
 
 The user has provided:
 1. Company website: ${url}
 2. Top call reasons:
 ${questions}
 
-WEBSITE CONTENT (use ONLY this — do not use training data or memory about this business):
+WEBSITE CONTENT (use ONLY this — do not use training data or memory):
 === START ===
 __WEBSITE_CONTENT__
 === END ===
 
 ---
 
-DETERMINISM FRAMEWORK — understand this before generating anything:
+DETERMINISM FRAMEWORK — understand before generating:
 
-There are 7 AIR configuration fields. Each has a different determinism level that determines how carefully the text must be written:
-
-HARD DETERMINISTIC (AIR uses your exact text — every word matters):
-- Company Description: AIR reads this as its behavioral identity and guardrail system. 500 char max. Every sentence shapes every conversation.
-- Custom Greeting: AIR speaks this word-for-word on every call. Must sound natural spoken aloud.
-- FAQ Skill: AIR uses your exact answer text when a question matches. These are the most important answers to get right — AIR does not paraphrase them.
-
-SOFT DETERMINISTIC (you define rules, AIR executes them, slight variation in transitional phrasing is normal):
-- Transfer by Context: Keywords trigger routing. AIR may vary the transitional phrase slightly ("one moment" vs "please hold") but always routes correctly.
-- SMS Skill: Message templates you write. Delivery timing is rule-based.
-
-MIXED (you define structure, AIR generates natural language from your content — variation is expected and acceptable):
-- Knowledge Base: AIR retrieves chunks from your uploaded content and paraphrases to answer. Quality of answers depends entirely on quality of source content.
-- Lead Capture: You define intake questions. AIR generates conversational phrasing to ask them.
+7 AIR configuration fields with determinism levels:
+HARD (exact text matters): Company Description, Custom Greeting, FAQ Skill
+SOFT (rules-based, slight variation OK): Transfer by Context, SMS
+MIXED (AI paraphrases your content): Knowledge Base, Lead Capture
 
 ---
 
 CONSTRAINTS:
-- FAQ entries: maximum 10. Choose the most important. Each answer must be speakable aloud in under 20 seconds.
-- Transfer by Context rules: maximum 10. Consolidate where possible.
-- Every section must explicitly label: the field name, its determinism level, and the exact Admin Portal path.
-- There is NO "Route Only FAQ" — routing goes in Transfer by Context, not FAQ skill. Do not confuse these.
-- Prohibition rules are NOT a separate field. They are embedded in the Company Description (hard deterministic) and enforced as Transfer by Context rules (soft deterministic).
+- FAQ entries: maximum 10, only questions AIR can fully answer without system access or clinical judgment
+- Transfer by Context rules: maximum 10, consolidate where possible
+- Routing goes in Transfer by Context ONLY — never in FAQ entries
+- Prohibition rules go in Company Description (hard) and Transfer by Context (soft)
+- Persona name: reason through cultural background of owner, location demographics, industry, brand tone, voice clarity
 
 ---
 
-ADMIN PORTAL PATH FOR EACH FIELD:
-- Company Description → service.ringcentral.com → Phone System → AI → AI Receptionist → [name] → Company Info
-- Custom Greeting → Phone System → AI → AI Receptionist → [name] → Skills → Custom Greeting
-- FAQ Skill → Phone System → AI → AI Receptionist → [name] → Skills → Frequently Asked Questions → Add
-- Transfer by Context → Phone System → AI → AI Receptionist → [name] → Skills → Transfer by Context → Add Rule
-- Knowledge Base → Phone System → AI → AI Receptionist → Knowledge Hub → Add Knowledge Base
-- SMS Skill → Phone System → AI → AI Receptionist → [name] → Skills → Send Text Messages
-- Lead Capture → Phone System → AI → AI Receptionist → [name] → Skills → Lead Capture
+Generate the complete AIR configuration using EXACTLY this structure and numbering:
+
+# 1. Practice Overview & AIR Strategy
+
+[One sentence info callout: "i | Purpose: [why AIR will help this specific practice]"]
+
+## 1.1 Practice at a Glance
+
+[Two-column table: Field | Value — use these exact row labels:]
+| Practice | [full name and specialty] |
+| Phone | [phone] |
+| Address | [address(es)] |
+| Website | [url] |
+| Fax | [fax if available] |
+| Services | [key services] |
+| Hours | [hours or "Not listed — obtain from office"] |
+
+## 1.2 Call Reasons — AIR Coverage Plan
+
+[Four-column table with these EXACT column headers: # | Call Reason | AIR Handles? | How]
+[For each call reason from the user's list, classify as:]
+- YES — fully resolves [green]
+- PARTIAL — explains then routes [amber]  
+- ROUTE — always to staff [red]
+
+[Warning callout: "! | Important: [note about any Route-only call reasons that must never be answered]"]
+
+## 1.3 Recommended AIR Persona
+
+**Name:** [chosen name]
+**Why:** [2-3 sentences — physician cultural background first, then location demographics, industry fit, voice clarity]
+**Tone:** [1-2 sentences — why this tone fits this specific caller population]
+
+# 2. AIR Setup — Field by Field
+
+Complete these fields in order at service.ringcentral.com → Phone System → AI → AI Receptionist → Create New.
+
+## 2.1 Receptionist Profile
+
+[Two-column table: Field | Value — Copy / Paste]
+| Receptionist Name | [chosen name] |
+| Primary Language | [language] |
+| Additional Language | [if recommended, explain why] |
+| Tone / Personality | [tone + brief why] |
+| Voice | [guidance on voice selection] |
+
+[Info callout: "i | Name choice: [cultural reasoning for the name]"]
+
+## 2.2 Company Description
+(Admin Portal → Company Info → Company Description field — 500 character max — HARD DETERMINISTIC)
+
+CRITICAL FIELD — seeds FAQ auto-generation and sets all behavioral guardrails. Copy exactly:
+
+[Copy box with exact 500-char text]
+
+Character count: [N]/500
+
+**Prohibition rules embedded in this description:**
+- [prohibition 1] → "[exact phrase AIR says]"
+- [prohibition 2] → "[exact phrase AIR says]"
+- [prohibition 3] → "[exact phrase AIR says]"
+
+[Success callout: "✓ | Why this works: [explain what the description does for AIR]"]
+
+## 2.3 Business Hours Greeting
+(Admin Portal → Skills → Custom Greeting → Business Hours — HARD DETERMINISTIC)
+
+[Dark copy box with greeting text]
+
+## 2.4 After-Hours Greeting
+(Admin Portal → Skills → Custom Greeting → After Hours — HARD DETERMINISTIC)
+
+[Dark copy box with greeting text]
+
+[Warning callout if clinical practice: "! | After-hours safety: [note about emergency redirect]"]
+
+## 2.5 Knowledge Base Strategy
+(Admin Portal → Knowledge Hub → Add Knowledge Base — MIXED DETERMINISTIC)
+
+**URLs to add:**
+- [url 1] — [what it contributes]
+- [url 2] — [what it contributes]
+
+**Documents to request from office:**
+- [doc 1] — [what it contributes]
+
+**Must NOT upload:**
+- [item] — [why]
+
+# 3. Skills Configuration
+
+## 3.1 FAQ Entries — Maximum 10
+(Admin Portal → Skills → Frequently Asked Questions → Add — HARD DETERMINISTIC)
+
+Enter each Q&A pair in the FAQ skill. Left column = question variants. Right column = exact answer AIR will speak.
+
+[For each FAQ, use EXACTLY this format:]
+
+### Call Reason [N] — [Topic Name]
+
+| QUESTION (what caller says) | ANSWER (what AIR says — copy exactly) |
+|---|---|
+| [variant 1] / [variant 2] / [variant 3] | [exact answer text — natural, warm, under 20 seconds spoken aloud] |
+
+[Repeat for each FAQ — max 10]
+
+## 3.2 Transfer by Context Rules
+(Admin Portal → Skills → Transfer by Context → Add Rule — SOFT DETERMINISTIC)
+
+[Three-column table for ALL routing rules:]
+| TRIGGER KEYWORDS / PHRASES | ROUTE TO | COVERS / NOTES |
+|---|---|---|
+| [15-20 natural caller phrases, comma separated] | [Department] | [which call reasons + AIR holding message] |
+
+[Repeat rows for each rule — max 10]
+
+## 3.3 Appointment Booking Setup
+(Admin Portal → Skills → Appointment Booking)
+
+[Setup instructions specific to this practice]
+
+## 3.4 SMS Configuration
+(Admin Portal → Skills → Send Text Messages)
+
+[SMS template and setup specific to this practice]
+
+# 4. Determinism Strategy
+(SE Reference — not entered into any AIR field)
+
+## 4.1 High-Determinism Facts — Must Go in FAQ Skill
+[List specific facts from this practice that must be exact]
+
+## 4.2 Low-Determinism Content — Knowledge Base Is Fine
+[List topics where paraphrasing is acceptable]
+
+## 4.3 Non-Determinism Risk Flags
+[Which FAQ answers are most at risk? Flag and explain]
+
+# 5. Admin Portal Setup Checklist
+
+[Numbered step-by-step sequence through service.ringcentral.com referencing specific values above]
+
+# 6. Recommendations — Make This Deployment Better
+
+[Bullet points covering: demographics/language gaps, KB gaps, routing gaps, skills not enabled, AIR Pro opportunity, risk flags]
+
+# 7. Recommendations — Improve the Persona
+
+[Bullet points covering: greeting quality for voice, FAQ answer quality review, non-determinism risks, what persona should always/never say, demo wow moments]
 
 ---
 
-Now generate the complete AIR configuration in this exact structure:
-
----
-
-## 1. PRACTICE SUMMARY
-What you extracted from the website content only. Business name, locations, phone, fax, services, hours (if listed), booking URL, compliance context, patient demographics, brand tone.
-
-Then:
-**Recommended AIR Persona Name:** 
-Reason through the name selection in this exact order — do not skip steps:
-
-STEP 1 — Physician/owner cultural background: Look at the business owner or physician name on the website. If the name suggests a specific cultural heritage (e.g. Chinese, Korean, Indian, Hispanic, etc.), the AI receptionist name should reflect or complement that heritage. A Chinese surgeon named Liu should have a receptionist with a name that feels culturally cohesive — like Mei, Lin, Jia, or similar — not a generic Western name like Sophia or Grace.
-
-STEP 2 — Location demographics: What is the cultural makeup of the local community? A Bay Area practice serves a highly diverse, Asian-American-heavy population. A practice in rural Alabama serves a very different population. The name should feel natural to the callers who will actually hear it.
-
-STEP 3 — Industry and caller emotional state: Is the caller anxious (surgery, legal), frustrated (home services), or neutral (retail)? Names that feel warm and calm work better for high-anxiety industries.
-
-STEP 4 — Brand tone: Premium and clinical vs. friendly and casual. The name should match.
-
-STEP 5 — Voice call clarity: The name must be immediately understood over a phone call. Avoid names that sound like other words or are hard to pronounce.
-
-Do not choose generic Western names (Sophia, Grace, Emma, Olivia) for practices where the owner has a non-Western cultural background and serves a diverse community. That is a mismatch.
-
-**Recommended name:** [name]
-**Why this name:** [2-3 sentences — walk through your Step 1-5 reasoning explicitly. Be specific to THIS practice.]
-**Recommended Tone:** [1-2 sentences — why this tone fits this specific caller population and brand]
-
----
-
-## 2. COMPANY DESCRIPTION
-**Field:** Company Description | **Determinism:** HARD | **Path:** Phone System → AI → AI Receptionist → [name] → Company Info
-**Character limit:** 500 maximum
-
-Write the exact text to paste. Structure it as:
-- Who Dr./practice is and what they do (1 sentence)
-- What AIR can help with (1 sentence)
-- Prohibition guardrails — what AIR must never do, specific to this practice (1 sentence, embedded naturally)
-
-State exact character count after.
-
-**Prohibition rules embedded here:**
-List each prohibition rule and the exact phrase AIR will use when it hits that boundary. These are HARD DETERMINISTIC — the company description trains AIR to say these things consistently.
-
----
-
-## 3. CUSTOM GREETING
-**Field:** Custom Greeting | **Determinism:** HARD | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Custom Greeting
-
-### Business Hours Greeting:
-[Exact script — spoken aloud, natural, states AIR name, what it can help with, invites caller to speak]
-
-### After-Hours Greeting:
-[Exact script — states office closed, what AIR can still do, emergency redirect if clinical practice]
-
----
-
-## 4. FAQ SKILL ENTRIES — HARD LIMIT: EXACTLY 10, NO MORE
-**Field:** FAQ Skill | **Determinism:** HARD | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Frequently Asked Questions → Add
-
-⚠️ STOP. COUNT YOUR FAQs. YOU MAY ONLY WRITE 10. NOT 11. NOT 12. NOT 20. EXACTLY 10 MAXIMUM.
-
-RULE: FAQs are ONLY for questions AIR can answer completely from website content, with no system access, no clinical judgment, and no routing required. If the answer requires transferring the caller — it is NOT a FAQ. It goes in Section 5 (Transfer by Context). Do not add a "route" answer to the FAQ section. That is wrong.
-
-Choose the 10 most important questions AIR can answer completely. Consolidate similar topics into one FAQ entry.
-
-For each entry use EXACTLY this format — do not deviate:
-
-**FAQ [#]: [Topic]**
-Question variants: "[variant 1]" / "[variant 2]" / "[variant 3]"
-Answer: "[exact text AIR speaks — natural, warm, under 20 seconds aloud]"
-
-Example:
-**FAQ 1: Office Location**
-Question variants: "Where are you located?" / "What is your address?" / "Do you have multiple offices?"
-Answer: "We have two Bay Area offices. Oakland is at 365 Hawthorne Avenue Suite 101. Berkeley is at 3010 Colby Street Suite 118. Which location works better for you?"
-
----
-
-## 5. TRANSFER BY CONTEXT RULES — HARD LIMIT: EXACTLY 10, NO MORE
-**Field:** Transfer by Context | **Determinism:** SOFT | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Transfer by Context → Add Rule
-
-⚠️ STOP. THIS SECTION MUST CONTAIN BETWEEN 5 AND 10 RULES. THIS IS WHERE ALL ROUTING LIVES.
-
-Every call reason that requires system access, clinical judgment, or real-time data goes HERE — not in FAQ. This includes: appointment confirmation, surgery cost, earlier availability, post-op symptoms, test results, surgery scheduling, insurance verification, and any other prohibited topic.
-
-Consolidate related routing into one rule where possible. Do not create a separate rule for every single question variant.
-
-For each rule:
-**Rule [#]: [Department Name]**
-Keywords: [15-20 natural caller phrases, comma separated]
-Route to: [Department — SE fills in actual extension number]
-Covers: [which call reasons this handles]
-AIR holding message: "[exact phrase]"
-
----
-
-## 6. KNOWLEDGE BASE STRATEGY
-**Field:** Knowledge Base | **Determinism:** MIXED | **Path:** Phone System → AI → AI Receptionist → Knowledge Hub → Add Knowledge Base
-
-⚠️ MIXED DETERMINISM: AIR paraphrases content from the knowledge base — variation is normal and acceptable here. Use the Knowledge Base for background context, not for facts that must be stated exactly (those go in FAQ skill).
-
-URLs to add (each on its own line with what it contributes):
-Documents to request from the office (each with what it contributes):
-What must NOT be uploaded (and why):
-
----
-
-## 7. APPOINTMENT BOOKING SETUP
-**Field:** SMS Skill + Appointment Booking | **Determinism:** SOFT | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Appointment Booking / Send Text Messages
-
-Calendar integration recommendation:
-Appointment types to create with suggested durations:
-SMS confirmation message template (exact text):
-Booking link to use if no calendar integration:
-
----
-
-## 8. LEAD CAPTURE SETUP (if relevant to this practice)
-**Field:** Lead Capture | **Determinism:** MIXED | **Path:** Phone System → AI → AI Receptionist → [name] → Skills → Lead Capture
-
-Custom intake questions to configure (AIR will ask these conversationally):
-CRM sync recommendation:
-
----
-
-## 9. DETERMINISM STRATEGY — SE REFERENCE
-Not entered into any field. SE reference only.
-
-**High-determinism facts (MUST go in FAQ skill — exact wording matters):**
-[List specific facts from this practice — addresses, phone, credentials, statistics, specific services]
-
-**Low-determinism content (Knowledge Base is fine — paraphrasing acceptable):**
-[List topics where variation is acceptable]
-
-**Non-determinism risk flags:**
-[Which FAQ answers are most at risk of AIR paraphrasing incorrectly? Flag them and explain why.]
-
----
-
-## 10. ADMIN PORTAL SETUP CHECKLIST
-Step-by-step sequence through service.ringcentral.com to configure everything above. Reference specific values from each section at each step. Number every step. An SE should be able to follow this start to finish with zero guesswork.
-
----
-
-## 11. RECOMMENDATIONS TO MAKE THIS AIR DEPLOYMENT BETTER
-Consultant section. Based on the practice, call reasons, and AIR best practices:
-- Demographics & language gaps
-- Knowledge base gaps — what content is missing
-- Routing gaps — call types not covered
-- Skills not enabled but should be
-- AIR Pro opportunity — any workflows complex enough for AIR Pro?
-- Website improvements that would make AIR smarter
-- Risk flags — what could cause AIR to underperform before go-live
-
----
-
-## 12. RECOMMENDATIONS TO IMPROVE THE PERSONA
-Critique the configuration you just generated:
-- Greeting quality — right length and tone for voice?
-- FAQ answer quality — which answers are weakest? Which are too long to speak aloud?
-- Non-determinism risk — which FAQ answers are most likely to be paraphrased incorrectly by AIR?
-- What the persona should always say — 3-5 trust-building phrases specific to this practice
-- What the persona must never say — practice-specific, beyond the prohibition rules already listed
-- Demo wow moments — the 2-3 specific interactions that will make the prospect say "I need this"
-
----
-
-Complete ALL sections. Do not stop early. An SE will use this configuration live with a real customer today.`;
+Complete ALL sections. Use the exact section numbers and headers shown. An SE will use this live with a real customer today.`;
 }
 
 async function generate() {

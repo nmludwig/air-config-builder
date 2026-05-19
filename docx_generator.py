@@ -486,6 +486,52 @@ def render(doc, content):
             add_body(doc, s.replace('**',''), bold=True, color=NAVY)
             i += 1; continue
 
+        # ── Markdown table ───────────────────────────────────
+        if s.startswith('|') and s.endswith('|'):
+            tbl_lines = []
+            while i < n and lines[i].strip().startswith('|'):
+                row_line = lines[i].strip()
+                # skip separator rows like |---|---|
+                if not re.match(r'^[|\s\-]+$', row_line):
+                    tbl_lines.append(row_line)
+                i += 1
+            if len(tbl_lines) >= 1:
+                def parse_row(line):
+                    cells = [c.strip() for c in line.strip('|').split('|')]
+                    return [re.sub(r'\*\*(.+?)\*\*', r'\1', c).strip() for c in cells]
+                rows = [parse_row(l) for l in tbl_lines]
+                if not rows:
+                    continue
+                headers = rows[0]
+                data = rows[1:] if len(rows) > 1 else []
+                
+                # Coverage plan: 4 cols, # and Handles
+                if len(headers) == 4 and headers[0].strip() in ('#','') and any('Handles' in h for h in headers):
+                    coverage_rows = [(r[0],r[1],r[2],r[3]) for r in data if len(r)==4]
+                    if coverage_rows: add_coverage_table(doc, coverage_rows)
+                
+                # FAQ: 2 cols, QUESTION header
+                elif len(headers) == 2 and 'QUESTION' in headers[0].upper():
+                    for r in data:
+                        if len(r) == 2: add_faq_table(doc, '', r[0], r[1])
+                
+                # Routing: 3 cols, TRIGGER/KEYWORD header
+                elif len(headers) == 3 and any(k in headers[0].upper() for k in ['TRIGGER','KEYWORD']):
+                    rules = [{'keywords':r[0],'route':r[1],'note':r[2]} for r in data if len(r)==3]
+                    if rules: add_routing_table(doc, rules)
+                
+                # KV table: 2 cols
+                elif len(headers) == 2:
+                    kv = [(r[0],r[1]) for r in data if len(r)==2]
+                    if kv: add_kv_table(doc, kv)
+                    elif len(rows)==1: add_copy_box(doc, rows[0][0])
+                
+                # Fallback
+                else:
+                    for r in data:
+                        if r: add_body(doc, ' | '.join(r))
+            continue
+
         # ── Plain text ───────────────────────────────────
         text = s.replace('**','').replace('*','')
         if text:
@@ -549,3 +595,71 @@ def generate_docx(biz_name, content, prepared_by="RingCentral SE"):
     doc.save(buf)
     buf.seek(0)
     return buf.read()
+
+# ── Coverage Plan Table (YES/PARTIAL/ROUTE color coding) ──
+def add_coverage_table(doc, rows):
+    """4-column table: # | Call Reason | AIR Handles? | How"""
+    C = [360, 3000, 2400, 3600]
+    table = doc.add_table(rows=1+len(rows), cols=4)
+    set_table_width(table, sum(C))
+    
+    headers = ["#", "Call Reason", "AIR Handles?", "How"]
+    hr = table.rows[0]
+    for j, (cell, hdr, w) in enumerate(zip(hr.cells, headers, C)):
+        set_col_width(cell, w)
+        set_cell_bg(cell, NAVY_H)
+        set_cell_borders(cell, NAVY_H)
+        set_cell_margins(cell, 80,80,120,80)
+        p = cell.paragraphs[0]; pspacing(p,0,0)
+        run(p, hdr, bold=True, color=WHITE, size=9)
+    
+    for i, row_data in enumerate(rows):
+        bg = GRAY_H if i%2==0 else WHITE_H
+        row = table.rows[i+1]
+        num, reason, handles, how = row_data
+        
+        # Determine color for "AIR Handles?" cell
+        handles_upper = handles.upper()
+        if 'YES' in handles_upper:
+            handles_bg = "1A5C2B"  # dark green
+            handles_color = RGBColor(0xFF,0xFF,0xFF)
+        elif 'PARTIAL' in handles_upper:
+            handles_bg = "7C4A00"  # dark amber  
+            handles_color = RGBColor(0xFF,0xFF,0xFF)
+        else:  # ROUTE
+            handles_bg = "8B1A1A"  # dark red
+            handles_color = RGBColor(0xFF,0xFF,0xFF)
+        
+        vals = [str(num), reason, handles, how]
+        bgs  = [bg, bg, handles_bg, bg]
+        colors = [None, None, handles_color, None]
+        bolds = [False, False, True, False]
+        
+        for j, (cell, val, bg_, col, bld) in enumerate(zip(row.cells, vals, bgs, colors, bolds)):
+            set_col_width(cell, C[j])
+            set_cell_bg(cell, bg_)
+            set_cell_borders(cell, GRAY2_H)
+            set_cell_margins(cell, 80,80,120,80)
+            p = cell.paragraphs[0]; pspacing(p,0,0)
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER if j==0 else WD_ALIGN_PARAGRAPH.LEFT
+            run(p, val, bold=bld, color=col, size=9)
+    
+    add_spacer(doc)
+
+def add_dark_copy_box(doc, text):
+    """Dark navy box with white italic text — for greetings"""
+    table = doc.add_table(rows=1, cols=1)
+    set_table_width(table, 9360)
+    cell = table.cell(0,0)
+    set_col_width(cell, 9360)
+    set_cell_bg(cell, "1E3A5F")
+    set_cell_borders(cell, "2D4E78", "4")
+    set_cell_margins(cell, 160, 160, 200, 200)
+    p = cell.paragraphs[0]
+    pspacing(p, 0, 0)
+    r = p.add_run(text)
+    r.font.name = 'Arial'
+    r.font.size = Pt(10)
+    r.font.color.rgb = WHITE
+    r.italic = True
+    add_spacer(doc)
