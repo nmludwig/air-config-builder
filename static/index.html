@@ -358,6 +358,14 @@ CONSTRAINTS:
 - Prohibition rules go in Company Description (hard) and Transfer by Context (soft)
 - Persona name: reason through cultural background of owner, location demographics, industry, brand tone, voice clarity
 
+IT / HELPDESK USE CASES — special rules:
+If this business is an IT helpdesk, internal support desk, or managed service provider (MSP), apply these additional rules:
+- Troubleshooting guides and step-by-step resolution scripts belong in the Knowledge Base as uploaded documents (CSV, Excel, or PDF) — NOT in FAQ entries
+- FAQ entries should only cover simple single-turn questions (password reset policy, hours, who to contact for X)
+- The Company Description MUST include behavioral instructions for guided troubleshooting: "Never list all steps at once. Give one step, then ask the caller to confirm before proceeding. End every response with a clear next-action prompt. If the issue is unresolved after 3 steps, offer to transfer to a technician."
+- Transfer by Context must include rules for escalating unresolved issues to a live technician after failed self-service
+- Note the AIR Pro upsell: AIR approximates guided troubleshooting — AIR Pro handles it reliably with true multi-step task completion
+
 ---
 
 Generate the complete AIR configuration using EXACTLY this structure and numbering:
@@ -539,7 +547,12 @@ For EACH FAQ entry use EXACTLY this format — no variations:
 
 # 6. Recommendations — Make This Deployment Better
 
-[Bullet points covering: demographics/language gaps, KB gaps, routing gaps, skills not enabled, AIR Pro opportunity, risk flags]
+[Bullet points covering: demographics/language gaps, KB gaps, routing gaps, skills not enabled, risk flags.
+
+ALWAYS include an AIR Pro upsell paragraph at the end of this section using this framing:
+AIR is the receptionist on Day 1 — eager, capable, working from the training you gave her. AIR Pro is that same person after two years on the job. She doesn't need to be told what to do next — she already knows.
+
+Specifically flag which of this prospect's call reasons would be better handled by AIR Pro (multi-step tasks, authentication on behalf of callers, complex workflow routing, guided troubleshooting). Frame it as a maturity curve: start with AIR, get value immediately, grow into AIR Pro as workflows get more complex.]
 
 # 7. Recommendations — Improve the Persona
 
