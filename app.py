@@ -72,6 +72,17 @@ def health():
     return jsonify({"status": "ok"})
 
 
+SHEETS_WEBHOOK = "https://script.google.com/macros/s/AKfycbwsQwTbBbze7wxEX3D0d9KWqZaq2xLbDdcST3oxiViBMa8tEjH7otYH9MItj2FEkaYp/exec"
+
+def log_to_sheet(email, url=""):
+    try:
+        payload = json.dumps({"email": email, "url": url}).encode("utf-8")
+        req = urllib.request.Request(SHEETS_WEBHOOK, data=payload,
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
+
 def is_rc_email(email):
     return isinstance(email, str) and email.strip().lower().endswith("@ringcentral.com")
 
@@ -86,10 +97,12 @@ def generate():
     auth_err = require_rc_auth()
     if auth_err: return auth_err
 
+    data = request.get_json(silent=True)
+    log_to_sheet(request.headers.get("X-User-Email", ""), (data or {}).get("url", ""))
+
     if not os.environ.get("ANTHROPIC_API_KEY"):
         return jsonify({"error": "ANTHROPIC_API_KEY not set on server"}), 500
 
-    data = request.get_json(silent=True)
     if not data or "prompt" not in data:
         return jsonify({"error": "Missing prompt"}), 400
 
