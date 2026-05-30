@@ -2,7 +2,7 @@
 
 An AI-powered web app for RingCentral Solutions Engineers to generate complete, copy-paste-ready AI Receptionist (AIR) configurations for any prospect — in minutes.
 
-Built with Python + Flask + Anthropic Claude + Firecrawl. Deployed on Render.
+Built with Python + Flask + Anthropic Claude + Firecrawl. Hosted on RingCentral CELAB infrastructure.
 
 ---
 
@@ -54,43 +54,24 @@ Understanding how each field works helps SEs write better configurations:
 - **Backend:** Python + Flask + Gunicorn
 - **AI:** Anthropic Claude Sonnet (claude-sonnet-4-5), 16,000 max tokens
 - **Web fetching:** Firecrawl API — handles Cloudflare, JavaScript rendering, bot protection
-- **Hosting:** Render (web service)
+- **Hosting:** Linux Mint server, Nginx reverse proxy, systemd, RingCentral CELAB
 - **Frontend:** Single-file HTML/CSS/JS, no framework
 
 ---
 
-## Deploy in 5 Minutes
+## Live URL
 
-### 1. Fork or clone to GitHub
+**[https://air-config-builder.celab.ringcentral.com/](https://air-config-builder.celab.ringcentral.com/)** — RingCentral internal (SE team access)
+
+## Deploy
 
 ```bash
-git clone https://github.com/nmludwig/air-config-builder
-cd air-config-builder
-git remote set-url origin https://github.com/YOUR_ORG/air-config-builder.git
-git push -u origin main
+# On the CELAB server (matthew.ludwig@matthewludwig.celab.ringcentral.com)
+cd /opt/air-config-builder && git pull origin main && sudo systemctl restart air-config-builder
+
+# Check logs
+sudo journalctl -u air-config-builder -f
 ```
-
-### 2. Create a Render Web Service
-
-1. Go to [render.com](https://render.com) → **New** → **Web Service**
-2. Connect your GitHub repo
-3. `render.yaml` auto-fills all settings
-4. Click **Create Web Service**
-
-### 3. Add Environment Variables
-
-In Render dashboard → **Environment** tab, add:
-
-| Key | Value | Required |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | Your key from [console.anthropic.com](https://console.anthropic.com) | ✅ Required |
-| `FIRECRAWL_API_KEY` | Your key from [firecrawl.dev](https://firecrawl.dev) | ✅ Required for auto-fetch |
-
-Click **Save** — Render redeploys automatically.
-
-### 4. Done
-
-Your app is live at `https://air-config-builder.onrender.com`. Share the URL with your SE team.
 
 ---
 
@@ -136,7 +117,7 @@ air-config-builder/
 
 ## Security
 
-- API keys live only in Render environment variables — never in frontend or git
+- API keys live in `/opt/air-config-builder/.env` on the server — never in frontend or git
 - `/api/generate` validates prompt length (40k char max)
 - No data is stored — every generation is stateless
 - For internal SE use — add authentication before exposing to customers
