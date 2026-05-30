@@ -18,7 +18,7 @@ RED     = RGBColor(0x99,0x1B,0x1B)
 AMBER   = RGBColor(0x92,0x40,0x0E)
 SLATE   = RGBColor(0x47,0x55,0x69)
 GRAY4   = RGBColor(0x94,0xA3,0xB8)
-TEXT2   = RGBColor(0x33,0x41,0x55)
+TEXT2   = RGBColor(0x1E,0x29,0x3B)
 WHITE   = RGBColor(0xFF,0xFF,0xFF)
 
 NAVY_H  = "1E3A5F"
@@ -34,7 +34,7 @@ RED_BD  = "FECACA"
 AMB_LT  = "FEF3C7"
 AMB_BD  = "FDE68A"
 GRAY_H  = "F3F4F6"
-GRAY2_H = "E2E8F0"
+GRAY2_H = "CBD5E1"
 WHITE_H = "FFFFFF"
 
 # ── XML Helpers ───────────────────────────────────────────
@@ -148,18 +148,18 @@ def run(para, text, bold=False, italic=False, color=None, size=10):
 # ── Block builders ────────────────────────────────────────
 def add_h1(doc, text):
     p = doc.add_paragraph()
-    pspacing(p, 320, 140)
-    para_border_bottom(p, BLUE_H, 12)
-    run(p, clean(text), bold=True, color=NAVY, size=18)
+    pspacing(p, 360, 160)
+    para_border_bottom(p, BLUE_H, 6)
+    run(p, clean(text), bold=True, color=NAVY, size=20)
 
 def add_h2(doc, text):
     p = doc.add_paragraph()
-    pspacing(p, 220, 100)
+    pspacing(p, 280, 120)
     run(p, clean(text), bold=True, color=NAVY, size=14)
 
 def add_h3(doc, text):
     p = doc.add_paragraph()
-    pspacing(p, 160, 80)
+    pspacing(p, 200, 80)
     run(p, clean(text), bold=True, color=BLUE, size=12)
 
 def add_body(doc, text, bold=False, italic=False, color=None, size=10):
@@ -206,50 +206,42 @@ def add_copy_box(doc, text):
     pspacing(p, 0, 0)
     r = p.add_run(clean(text))
     r.font.name = 'Courier New'
-    r.font.size = Pt(9)
+    r.font.size = Pt(10)
     r.font.color.rgb = RGBColor(0x16,0x65,0x34)
     add_spacer(doc)
 
-def add_dark_box(doc, text):
-    """Dark navy box with white italic text — for greetings"""
-    table = doc.add_table(rows=1, cols=1)
-    set_table_width(table, 9360)
-    cell = table.cell(0,0)
-    set_col_width(cell, 9360)
-    set_cell_bg(cell, NAVY_H)
-    set_cell_borders(cell, "2D4E78", "4")
-    set_cell_margins(cell, 160, 160, 200, 200)
-    p = cell.paragraphs[0]
-    pspacing(p, 0, 0)
-    # Handle BUSINESS HOURS / AFTER-HOURS labels inside box
+def add_greeting(doc, text):
+    """Navy bold label + italic body text — matching reference doc style"""
     text = clean(text)
     for label in ["BUSINESS HOURS GREETING:", "AFTER-HOURS GREETING:"]:
         if label in text:
             parts = text.split(label)
             for j, part in enumerate(parts):
                 if j > 0:
-                    lp = cell.add_paragraph()
-                    pspacing(lp, 60, 0)
+                    lp = doc.add_paragraph()
+                    pspacing(lp, 120, 0)
                     lr = lp.add_run(label)
                     lr.bold = True
                     lr.font.name = 'Arial'
                     lr.font.size = Pt(10)
-                    lr.font.color.rgb = WHITE
+                    lr.font.color.rgb = NAVY
                     if part.strip():
-                        cp = cell.add_paragraph()
-                        pspacing(cp, 0, 60)
+                        cp = doc.add_paragraph()
+                        pspacing(cp, 60, 60)
                         cr = cp.add_run(part.strip())
                         cr.italic = True
                         cr.font.name = 'Arial'
                         cr.font.size = Pt(10)
-                        cr.font.color.rgb = WHITE
+                        cr.font.color.rgb = TEXT2
             return
+    # Single greeting (no label)
+    p = doc.add_paragraph()
+    pspacing(p, 60, 60)
     r = p.add_run(text)
     r.italic = True
     r.font.name = 'Arial'
     r.font.size = Pt(10)
-    r.font.color.rgb = WHITE
-    add_spacer(doc)
+    r.font.color.rgb = TEXT2
 
 def add_callout(doc, icon, label, body_text, bg, text_color):
     table = doc.add_table(rows=1, cols=2)
@@ -299,9 +291,9 @@ def add_faq_table(doc, title, question_variants, answer):
     set_cell_bg(c1, GRAY_H);  set_cell_borders(c1, GRAY2_H)
     set_cell_margins(c0, 100,100,120,80); set_cell_margins(c1, 100,100,120,120)
     p0 = c0.paragraphs[0]; pspacing(p0,0,0)
-    run(p0, clean(question_variants), italic=True, size=9)
+    run(p0, clean(question_variants), italic=True, size=9.5)
     p1 = c1.paragraphs[0]; pspacing(p1,0,0)
-    run(p1, clean(answer), size=9)
+    run(p1, clean(answer), size=9.5)
     add_spacer(doc)
 
 def add_routing_table(doc, rules):
@@ -360,14 +352,14 @@ def add_coverage_table(doc, rows):
     for i, row_data in enumerate(rows):
         num, reason, handles, how = row_data[0], row_data[1], row_data[2], row_data[3]
         h_upper = clean(handles).upper()
-        if 'YES' in h_upper:   h_bg, h_col = "1A5C2B", WHITE
-        elif 'PARTIAL' in h_upper: h_bg, h_col = "7C4A00", WHITE
-        else:                       h_bg, h_col = "8B1A1A", WHITE
+        if 'YES' in h_upper:       h_col = RGBColor(0x16,0x65,0x34)
+        elif 'PARTIAL' in h_upper: h_col = RGBColor(0x92,0x40,0x0E)
+        else:                       h_col = RGBColor(0x99,0x1B,0x1B)
         bg = GRAY_H if i%2==0 else WHITE_H
         row = table.rows[i+1]
         vals  = [str(num), clean(reason), clean(handles), clean(how)]
-        bgs   = [bg, bg, h_bg, bg]
-        cols  = [None, None, RGBColor(0xFF,0xFF,0xFF), None]
+        bgs   = [bg, bg, bg, bg]
+        cols  = [None, None, h_col, None]
         bolds = [False, False, True, False]
         aligns= [WD_ALIGN_PARAGRAPH.CENTER, WD_ALIGN_PARAGRAPH.LEFT, WD_ALIGN_PARAGRAPH.LEFT, WD_ALIGN_PARAGRAPH.LEFT]
         for j, (cell, val, bg_, col_, bld, aln) in enumerate(zip(row.cells, vals, bgs, cols, bolds, aligns)):
@@ -608,6 +600,12 @@ def render(doc, content):
             add_numbered(doc, clean(re.sub(r'^\d+\.\s+', '', s)))
             i += 1; continue
 
+        # ── DARK_BOX: greeting ────────────────────────────
+        m_db = re.match(r'^DARK_BOX:\s*(.*)', s)
+        if m_db:
+            add_greeting(doc, m_db.group(1).strip('"').strip())
+            i += 1; continue
+
         # ── Bold label: value ─────────────────────────────
         bkv = re.match(r'^\*\*(.+?)\*\*::\s*(.+)', s)
         if not bkv:
@@ -640,8 +638,8 @@ def render(doc, content):
 def generate_docx(biz_name, content, prepared_by="RingCentral SE"):
     doc = Document()
     for section in doc.sections:
-        section.top_margin = section.bottom_margin = Inches(1)
-        section.left_margin = section.right_margin = Inches(1)
+        section.top_margin = section.bottom_margin = Inches(0.875)
+        section.left_margin = section.right_margin = Inches(0.875)
 
     doc.styles['Normal'].font.name = 'Arial'
     doc.styles['Normal'].font.size = Pt(10)
@@ -663,17 +661,17 @@ def generate_docx(biz_name, content, prepared_by="RingCentral SE"):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     pspacing(p, 80, 40)
-    run(p, biz_name, bold=True, color=SLATE, size=16)
+    run(p, biz_name, bold=True, color=SLATE, size=18)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     pspacing(p, 20, 20)
-    run(p, "Ready-to-paste configuration for every AIR field", italic=True, color=GRAY4, size=10)
+    run(p, "Ready-to-paste configuration for every AIR field", italic=True, color=GRAY4, size=12)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     pspacing(p, 20, 20)
-    run(p, f"Prepared by: {prepared_by}  |  {today}", italic=True, color=GRAY4, size=9)
+    run(p, f"Prepared by: {prepared_by}  |  {today}", italic=True, color=GRAY4, size=10)
 
     doc.add_page_break()
 
