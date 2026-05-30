@@ -143,6 +143,33 @@ air-config-builder/
 
 ---
 
+## Will the Output Work with RingCentral AIR?
+
+The Word doc is a **deliverable for the SE** — it is not uploaded to AIR directly. The SE uses it as a copy-paste reference while configuring the AIR Admin Portal by hand.
+
+"Will it work with AIR" really means: does the content Claude generates match what AIR actually expects in each field?
+
+### Key Validation Checks
+
+After generating, review these before the SE configures AIR:
+
+| Field | What to Check | Why It Matters |
+|---|---|---|
+| **Company Description** | ≤500 characters, written as a behavioral prompt for AIR (not marketing copy) | This is AIR's core identity — bad description = bad behavior across all calls |
+| **FAQ Answers** | 2–4 sentences max, plain conversational language | AIR reads these aloud — paragraph-length answers sound robotic |
+| **Transfer by Context keywords** | Specific, caller-realistic phrases (not generic words like "help") | AIR does fuzzy keyword matching — vague keywords cause misfires |
+| **Greetings** | Short sentences, speakable out loud, no credentials or marketing | AIR speaks the greeting verbatim — complex grammar sounds unnatural |
+
+### Quick Sanity Test
+
+Run a generation on a real prospect URL and check:
+- Company description character count is under 500
+- FAQ answers are 2–4 sentences each
+- Greetings read naturally when spoken aloud
+- Routing keywords are specific to what callers actually say
+
+---
+
 ## Built By
 
 Matthew Ludwig — RingCentral Solutions Engineering  
