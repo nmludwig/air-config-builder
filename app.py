@@ -72,7 +72,7 @@ def health():
     return jsonify({"status": "ok"})
 
 
-SHEETS_WEBHOOK = "https://script.google.com/macros/s/AKfycbwsQwTbBbze7wxEX3D0d9KWqZaq2xLbDdcST3oxiViBMa8tEjH7otYH9MItj2FEkaYp/exec"
+SHEETS_WEBHOOK = "https://script.google.com/macros/s/AKfycbznh8z1HpmCGux2i_ONJkxsdMXgf13wulC3RQe4NnEXB2JRGWpha_60xqXcrsn7IeL6/exec"
 
 def log_to_sheet(email, url=""):
     try:
