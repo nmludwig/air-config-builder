@@ -72,8 +72,20 @@ def health():
     return jsonify({"status": "ok"})
 
 
+def is_rc_email(email):
+    return isinstance(email, str) and email.strip().lower().endswith("@ringcentral.com")
+
+def require_rc_auth():
+    email = request.headers.get("X-User-Email", "")
+    if not is_rc_email(email):
+        return jsonify({"error": "Unauthorized — RingCentral email required"}), 401
+    return None
+
 @app.route("/api/generate", methods=["POST"])
 def generate():
+    auth_err = require_rc_auth()
+    if auth_err: return auth_err
+
     if not os.environ.get("ANTHROPIC_API_KEY"):
         return jsonify({"error": "ANTHROPIC_API_KEY not set on server"}), 500
 
@@ -135,6 +147,9 @@ def generate():
 
 @app.route("/api/export", methods=["POST"])
 def export_docx():
+    auth_err = require_rc_auth()
+    if auth_err: return auth_err
+
     from docx_generator import generate_docx
     data = request.get_json(silent=True)
     if not data or "content" not in data:
