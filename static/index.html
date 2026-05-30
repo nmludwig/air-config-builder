@@ -80,6 +80,13 @@
 
     .success-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--grn-lt);border:1px solid var(--grn-bd);border-radius:var(--radius-sm);margin-bottom:1rem;font-size:13px;color:var(--green);font-weight:500}
 
+    /* ── Suggest button ── */
+    .suggest-row{display:flex;align-items:center;gap:10px;margin:1rem 0}
+    .suggest-line{flex:1;height:1px;background:var(--border)}
+    .suggest-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;font-size:12.5px;font-weight:600;font-family:'Inter',sans-serif;border-radius:20px;border:1.5px dashed var(--blue);background:var(--blue-lt);color:var(--blue);cursor:pointer;white-space:nowrap;transition:all .12s;flex-shrink:0}
+    .suggest-btn:hover:not(:disabled){background:var(--blue-md);border-style:solid}
+    .suggest-btn:disabled{opacity:.5;cursor:not-allowed}
+
     /* ── Login overlay ── */
     .login-overlay{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1.5rem}
     .login-card{background:white;border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
@@ -156,24 +163,22 @@
       <div class="hint">Claude will read this site to learn the business — name, services, locations, hours, and everything needed to build the configuration. No manual data entry required.</div>
     </div>
 
-    <div class="divider"></div>
+    <div class="suggest-row">
+      <div class="suggest-line"></div>
+      <button class="suggest-btn" id="suggestBtn" onclick="suggestCallReasons()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        AI: Predict top 10 call reasons from website
+      </button>
+      <div class="suggest-line"></div>
+    </div>
 
     <div class="field">
       <div class="field-label">
         <div class="field-num">2</div>
-        <label>Top call reasons &nbsp;<span>— one per line, exactly as staff described them</span></label>
+        <label>Top call reasons &nbsp;<span>— paste from discovery, or use AI suggestion above</span></label>
       </div>
-      <textarea id="questions" placeholder="1. Confirm that appointment booked online actually went through
-2. How much is surgery going to cost?
-3. Any earlier appointments available?
-4. What kind of mesh does Dr. Liu use?
-5. Can Dr. Liu do hernia surgery without mesh?
-6. Does Dr. Liu take my insurance?
-7. Patient wants to schedule by phone (older patients)
-8. Questions about post-op symptoms
-9. Patient wants to schedule surgery or hasn't heard back
-10. What is going on with the test Dr. Liu ordered?"></textarea>
-      <div class="hint">Paste these directly from the prospect's staff email or notes. The more specific, the better the generated FAQs and routing rules.</div>
+      <textarea id="questions" placeholder="Paste call reasons from discovery — or click 'AI: Predict top 10 call reasons' above to have Claude estimate them from the website."></textarea>
+      <div class="hint">If you have call reasons from discovery, paste them here. If not, use the AI suggestion button above — Claude will read the website and predict the most likely reasons callers contact this business.</div>
     </div>
 
     <div class="field">
@@ -287,6 +292,36 @@ function authHeaders() {
     document.getElementById('userEmail').textContent = email;
   }
 })();
+
+// ── Suggest call reasons ──────────────────────────────────
+async function suggestCallReasons() {
+  const url = document.getElementById('url').value.trim();
+  if (!url) { alert('Enter the company website URL first.'); return; }
+
+  const btn = document.getElementById('suggestBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-color:rgba(15,98,254,.3);border-top-color:var(--blue);width:12px;height:12px;border-width:2px"></span> Reading website...';
+
+  try {
+    const res = await fetch('/api/suggest', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ url })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.message || 'Could not read website. Try pasting content into field 3.');
+      return;
+    }
+    const data = await res.json();
+    document.getElementById('questions').value = data.reasons || '';
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> AI: Predict top 10 call reasons from website';
+  }
+}
 
 // ── App ───────────────────────────────────────────────────
 function buildPrompt() {

@@ -158,6 +158,45 @@ def generate():
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+@app.route("/api/suggest", methods=["POST"])
+def suggest():
+    auth_err = require_rc_auth()
+    if auth_err: return auth_err
+
+    data = request.get_json(silent=True)
+    url = (data or {}).get("url", "").strip()
+    if not url:
+        return jsonify({"error": "Missing URL"}), 400
+
+    content, error = fetch_via_firecrawl(url)
+    if content is None:
+        return jsonify({"error": "FETCH_FAILED", "message": f"Could not read website ({error}). Try pasting content into field 3."}), 422
+
+    prompt = f"""You are an expert at understanding small and medium businesses from their website.
+
+Read the following website content and identify the top 10 reasons callers most likely contact this business by phone.
+
+Write them as a numbered list, one per line, phrased exactly as a staff member or office manager would describe them — short, plain language, specific to this business. No generic entries like "general inquiries."
+
+Website: {url}
+
+Website content:
+{content[:8000]}
+
+Output ONLY the numbered list, nothing else. Example format:
+1. Schedule a new patient consultation
+2. Check on insurance coverage
+3. Questions about post-op care"""
+
+    result = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=512,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    reasons = result.content[0].text.strip()
+    return jsonify({"reasons": reasons})
+
+
 @app.route("/api/export", methods=["POST"])
 def export_docx():
     auth_err = require_rc_auth()
