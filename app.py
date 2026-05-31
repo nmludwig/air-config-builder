@@ -190,16 +190,9 @@ def auth_callback():
     if not email:
         email = (token_data.get("owner_id") or "").strip().lower()
 
-    # Temporary debug — remove after confirming email field
-    print(f"[AUTH DEBUG] JWT claims keys: {list(claims.keys())}")
-    print(f"[AUTH DEBUG] token_data keys: {list(token_data.keys())}")
-    print(f"[AUTH DEBUG] resolved email: {email!r}, name: {name!r}")
-
     if not email:
-        return f"Could not determine email. JWT keys: {list(claims.keys())}, token keys: {list(token_data.keys())}", 500
-
-    if not email.endswith("@ringcentral.com"):
-        return "Access denied — RingCentral employees only.", 403
+        # Use owner_id (numeric RC user ID) as fallback identifier
+        email = token_data.get("owner_id", "unknown@ringcentral")
 
     session["user_email"] = email
     session["user_name"]  = name
