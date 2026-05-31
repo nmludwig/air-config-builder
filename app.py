@@ -72,7 +72,7 @@ def health():
     return jsonify({"status": "ok"})
 
 
-SHEETS_WEBHOOK = "https://script.google.com/macros/s/AKfycbznh8z1HpmCGux2i_ONJkxsdMXgf13wulC3RQe4NnEXB2JRGWpha_60xqXcrsn7IeL6/exec"
+SHEETS_WEBHOOK = os.getenv("SHEETS_WEBHOOK_URL", "")
 
 def get_client_ip():
     # Respect X-Forwarded-For set by Nginx reverse proxy
@@ -82,6 +82,8 @@ def get_client_ip():
     return request.remote_addr or ""
 
 def log_to_sheet(email, url=""):
+    if not SHEETS_WEBHOOK:
+        return
     try:
         payload = json.dumps({"email": email, "url": url, "ip": get_client_ip()}).encode("utf-8")
         req = urllib.request.Request(SHEETS_WEBHOOK, data=payload,
