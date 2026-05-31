@@ -92,14 +92,26 @@ def log_to_sheet(email, url=""):
     except Exception:
         pass
 
+APP_PASSWORD = os.getenv("APP_PASSWORD", "")
+
 def is_rc_email(email):
     return isinstance(email, str) and email.strip().lower().endswith("@ringcentral.com")
 
 def require_rc_auth():
     email = request.headers.get("X-User-Email", "")
+    password = request.headers.get("X-App-Password", "")
     if not is_rc_email(email):
         return jsonify({"error": "Unauthorized — RingCentral email required"}), 401
+    if APP_PASSWORD and password != APP_PASSWORD:
+        return jsonify({"error": "Unauthorized — incorrect password"}), 401
     return None
+
+@app.route("/api/verify", methods=["POST"])
+def verify():
+    err = require_rc_auth()
+    if err: return err
+    return jsonify({"ok": True})
+
 
 @app.route("/api/generate", methods=["POST"])
 def generate():

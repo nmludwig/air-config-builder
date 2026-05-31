@@ -123,8 +123,9 @@
     </div>
     <h2>Sign in to continue</h2>
     <p>This tool is for RingCentral employees only. Enter your RingCentral email address to access.</p>
-    <input class="login-input" id="loginEmail" type="email" placeholder="you@ringcentral.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
-    <div class="login-error" id="loginError">Please use your @ringcentral.com email address.</div>
+    <input class="login-input" id="loginEmail" type="email" placeholder="you@ringcentral.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+    <input class="login-input" id="loginPassword" type="password" placeholder="Team password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-error" id="loginError">Please use your @ringcentral.com email and correct password.</div>
     <button class="login-btn" onclick="doLogin()">Sign in</button>
     <div class="login-note">Access is limited to RingCentral employees.</div>
   </div>
@@ -254,40 +255,88 @@
 
 <script>
 // ── Auth ──────────────────────────────────────────────────
-function rcEmail() { return localStorage.getItem('rc_email') || ''; }
+function rcEmail()    { return localStorage.getItem('rc_email') || ''; }
+function rcPassword() { return localStorage.getItem('rc_password') || ''; }
 
-function doLogin() {
-  const input = document.getElementById('loginEmail');
-  const err   = document.getElementById('loginError');
-  const email = input.value.trim().toLowerCase();
+async function doLogin() {
+  const emailInput = document.getElementById('loginEmail');
+  const passInput  = document.getElementById('loginPassword');
+  const err        = document.getElementById('loginError');
+  const email      = emailInput.value.trim().toLowerCase();
+  const password   = passInput.value;
+
   if (!email.endsWith('@ringcentral.com')) {
-    input.classList.add('error');
+    emailInput.classList.add('error');
     err.style.display = 'block';
-    input.focus();
+    emailInput.focus();
     return;
   }
+
+  // Verify password server-side before storing
+  const btn = document.querySelector('.login-btn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  try {
+    const res = await fetch('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Email': email, 'X-App-Password': password }
+    });
+    if (!res.ok) {
+      emailInput.classList.add('error');
+      passInput.classList.add('error');
+      err.style.display = 'block';
+      passInput.focus();
+      return;
+    }
+  } catch(e) {
+    err.textContent = 'Network error — try again.';
+    err.style.display = 'block';
+    return;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sign in';
+  }
+
   localStorage.setItem('rc_email', email);
+  localStorage.setItem('rc_password', password);
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('userEmail').textContent = email;
 }
 
 function signOut() {
   localStorage.removeItem('rc_email');
+  localStorage.removeItem('rc_password');
   document.getElementById('userEmail').textContent = '';
   document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
   document.getElementById('loginEmail').classList.remove('error');
+  document.getElementById('loginPassword').classList.remove('error');
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('loginOverlay').style.display = 'flex';
 }
 
 function authHeaders() {
-  return { 'Content-Type': 'application/json', 'X-User-Email': rcEmail() };
+  return { 'Content-Type': 'application/json', 'X-User-Email': rcEmail(), 'X-App-Password': rcPassword() };
 }
 
-// Check login on load
-(function() {
-  const email = rcEmail();
-  if (email) {
+// Check login on load — re-verify stored credentials with server
+(async function() {
+  const email    = rcEmail();
+  const password = rcPassword();
+  if (!email) return;
+  try {
+    const res = await fetch('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Email': email, 'X-App-Password': password }
+    });
+    if (res.ok) {
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('userEmail').textContent = email;
+    } else {
+      signOut(); // stored credentials are stale/wrong — force re-login
+    }
+  } catch(e) {
+    // Network error on load — let them in if they have stored creds
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('userEmail').textContent = email;
   }
