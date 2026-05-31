@@ -23,7 +23,7 @@ RC_CLIENT_SECRET = os.environ.get("RC_CLIENT_SECRET", "")
 RC_REDIRECT_URI  = os.environ.get("RC_REDIRECT_URI", "https://air-config-builder.celab.ringcentral.com/auth/callback")
 RC_AUTH_URL      = "https://platform.ringcentral.com/restapi/oauth/authorize"
 RC_TOKEN_URL     = "https://platform.ringcentral.com/restapi/oauth/token"
-RC_USERINFO_URL  = "https://platform.ringcentral.com/restapi/oauth/userinfo"
+RC_USERINFO_URL  = "https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~"
 
 
 # ── Firecrawl ─────────────────────────────────────────────────────────────────
@@ -167,8 +167,8 @@ def auth_callback():
     except Exception as e:
         return f"Failed to fetch user info: {e}", 500
 
-    email = (userinfo.get("email") or "").strip().lower()
-    name  = userinfo.get("name") or userinfo.get("given_name") or email
+    email = (userinfo.get("contact", {}).get("email") or "").strip().lower()
+    name  = userinfo.get("name") or f"{userinfo.get('contact', {}).get('firstName', '')} {userinfo.get('contact', {}).get('lastName', '')}".strip() or email
 
     if not email.endswith("@ringcentral.com"):
         return "Access denied — RingCentral employees only.", 403
