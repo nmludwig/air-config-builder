@@ -166,33 +166,15 @@ def auth_callback():
 
     access_token = token_data.get("access_token", "")
 
-    # Try to get email from JWT claims first (no extra API call needed)
+    # Decode JWT claims to get user identity — no extra API call needed
     claims = decode_jwt_payload(access_token)
     email  = (claims.get("email") or claims.get("preferred_username") or "").strip().lower()
-    name   = claims.get("name") or claims.get("given_name") or ""
+    name   = (claims.get("name") or claims.get("given_name") or "").strip()
 
-    # Fall back to userinfo API if JWT didn't have email
+    # Fall back to owner_id from token response (RC numeric user ID)
     if not email:
-        try:
-            userinfo_resp = http_requests.get(
-                RC_USERINFO_URL,
-                headers={"Authorization": f"Bearer {access_token}"},
-                timeout=10,
-            )
-            userinfo_resp.raise_for_status()
-            userinfo = userinfo_resp.json()
-            email = (userinfo.get("contact", {}).get("email") or "").strip().lower()
-            name  = name or f"{userinfo.get('contact', {}).get('firstName', '')} {userinfo.get('contact', {}).get('lastName', '')}".strip()
-        except Exception as e:
-            return f"Failed to fetch user info: {e}", 500
-
-    # Also check token_data for email (RC sometimes puts it there)
-    if not email:
-        email = (token_data.get("owner_id") or "").strip().lower()
-
-    if not email:
-        # Use owner_id (numeric RC user ID) as fallback identifier
-        email = token_data.get("owner_id", "unknown@ringcentral")
+        owner_id = str(token_data.get("owner_id") or claims.get("sub") or "unknown")
+        email = f"rc_user_{owner_id}"
 
     session["user_email"] = email
     session["user_name"]  = name
