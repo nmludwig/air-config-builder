@@ -23,7 +23,18 @@ RC_CLIENT_SECRET = os.environ.get("RC_CLIENT_SECRET", "")
 RC_REDIRECT_URI  = os.environ.get("RC_REDIRECT_URI", "https://air-config-builder.celab.ringcentral.com/auth/callback")
 RC_AUTH_URL      = "https://platform.ringcentral.com/restapi/oauth/authorize"
 RC_TOKEN_URL     = "https://platform.ringcentral.com/restapi/oauth/token"
-RC_USERINFO_URL  = "https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~"
+RC_USERINFO_URL  = "https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~"  # fallback
+
+def decode_jwt_payload(token):
+    """Decode JWT payload without verifying signature — just to read claims."""
+    import base64
+    try:
+        payload_b64 = token.split(".")[1]
+        # Fix padding
+        payload_b64 += "=" * (4 - len(payload_b64) % 4)
+        return json.loads(base64.urlsafe_b64decode(payload_b64))
+    except Exception:
+        return {}
 
 
 # ── Firecrawl ─────────────────────────────────────────────────────────────────
@@ -155,20 +166,37 @@ def auth_callback():
 
     access_token = token_data.get("access_token", "")
 
-    # Fetch user profile to get email
-    try:
-        userinfo_resp = http_requests.get(
-            RC_USERINFO_URL,
-            headers={"Authorization": f"Bearer {access_token}"},
-            timeout=10,
-        )
-        userinfo_resp.raise_for_status()
-        userinfo = userinfo_resp.json()
-    except Exception as e:
-        return f"Failed to fetch user info: {e}", 500
+    # Try to get email from JWT claims first (no extra API call needed)
+    claims = decode_jwt_payload(access_token)
+    email  = (claims.get("email") or claims.get("preferred_username") or "").strip().lower()
+    name   = claims.get("name") or claims.get("given_name") or ""
 
-    email = (userinfo.get("contact", {}).get("email") or "").strip().lower()
-    name  = userinfo.get("name") or f"{userinfo.get('contact', {}).get('firstName', '')} {userinfo.get('contact', {}).get('lastName', '')}".strip() or email
+    # Fall back to userinfo API if JWT didn't have email
+    if not email:
+        try:
+            userinfo_resp = http_requests.get(
+                RC_USERINFO_URL,
+                headers={"Authorization": f"Bearer {access_token}"},
+                timeout=10,
+            )
+            userinfo_resp.raise_for_status()
+            userinfo = userinfo_resp.json()
+            email = (userinfo.get("contact", {}).get("email") or "").strip().lower()
+            name  = name or f"{userinfo.get('contact', {}).get('firstName', '')} {userinfo.get('contact', {}).get('lastName', '')}".strip()
+        except Exception as e:
+            return f"Failed to fetch user info: {e}", 500
+
+    # Also check token_data for email (RC sometimes puts it there)
+    if not email:
+        email = (token_data.get("owner_id") or "").strip().lower()
+
+    # Temporary debug — remove after confirming email field
+    print(f"[AUTH DEBUG] JWT claims keys: {list(claims.keys())}")
+    print(f"[AUTH DEBUG] token_data keys: {list(token_data.keys())}")
+    print(f"[AUTH DEBUG] resolved email: {email!r}, name: {name!r}")
+
+    if not email:
+        return f"Could not determine email. JWT keys: {list(claims.keys())}, token keys: {list(token_data.keys())}", 500
 
     if not email.endswith("@ringcentral.com"):
         return "Access denied — RingCentral employees only.", 403
