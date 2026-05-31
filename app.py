@@ -1,20 +1,32 @@
 import os
 import json
 import re
+import secrets
 import urllib.request
 import urllib.error
-from flask import Flask, request, Response, send_from_directory, jsonify
+from flask import Flask, request, Response, send_from_directory, jsonify, session, redirect
 from flask_cors import CORS
 import anthropic
+import requests as http_requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__, static_folder="static", static_url_path="")
-CORS(app)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
+CORS(app, supports_credentials=True)
 
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
 
+RC_CLIENT_ID     = os.environ.get("RC_CLIENT_ID", "")
+RC_CLIENT_SECRET = os.environ.get("RC_CLIENT_SECRET", "")
+RC_REDIRECT_URI  = os.environ.get("RC_REDIRECT_URI", "https://air-config-builder.celab.ringcentral.com/auth/callback")
+RC_AUTH_URL      = "https://platform.ringcentral.com/restapi/oauth/authorize"
+RC_TOKEN_URL     = "https://platform.ringcentral.com/restapi/oauth/token"
+RC_USERINFO_URL  = "https://platform.ringcentral.com/restapi/oauth/userinfo"
+
+
+# ── Firecrawl ─────────────────────────────────────────────────────────────────
 
 def fetch_via_firecrawl(url):
     """Fetch website content via Firecrawl — handles Cloudflare, JS rendering, bot protection."""
@@ -45,8 +57,6 @@ def fetch_via_firecrawl(url):
 
             if result.get("success") and result.get("data", {}).get("markdown"):
                 content = result["data"]["markdown"]
-                # Only flag genuine block pages — not cookie banners or normal pages
-                # Require multiple signals AND very short content to avoid false positives
                 hard_block_signals = ["verify you are human", "just a moment...", "enable javascript and cookies to continue"]
                 is_hard_block = any(s in content.lower() for s in hard_block_signals) and len(content.strip()) < 500
                 if is_hard_block:
@@ -62,20 +72,11 @@ def fetch_via_firecrawl(url):
         return None, f"Fetch failed: {str(e)}"
 
 
-@app.route("/")
-def index():
-    return send_from_directory("static", "index.html")
-
-
-@app.route("/health")
-def health():
-    return jsonify({"status": "ok"})
-
+# ── Google Sheets logging ──────────────────────────────────────────────────────
 
 SHEETS_WEBHOOK = os.getenv("SHEETS_WEBHOOK_URL", "")
 
 def get_client_ip():
-    # Respect X-Forwarded-For set by Nginx reverse proxy
     forwarded = request.headers.get("X-Forwarded-For", "")
     if forwarded:
         return forwarded.split(",")[0].strip()
@@ -92,34 +93,127 @@ def log_to_sheet(email, url=""):
     except Exception:
         pass
 
-APP_PASSWORD = os.getenv("APP_PASSWORD", "")
 
-def is_rc_email(email):
-    return isinstance(email, str) and email.strip().lower().endswith("@ringcentral.com")
+# ── Auth helpers ───────────────────────────────────────────────────────────────
 
-def require_rc_auth():
-    email = request.headers.get("X-User-Email", "")
-    password = request.headers.get("X-App-Password", "")
-    if not is_rc_email(email):
-        return jsonify({"error": "Unauthorized — RingCentral email required"}), 401
-    if APP_PASSWORD and password != APP_PASSWORD:
-        return jsonify({"error": "Unauthorized — incorrect password"}), 401
+def current_user():
+    """Return the logged-in user's email from session, or None."""
+    return session.get("user_email")
+
+def require_auth():
+    """Return a 401 response if not logged in, else None."""
+    if not current_user():
+        return jsonify({"error": "Unauthorized — please sign in"}), 401
     return None
 
-@app.route("/api/verify", methods=["POST"])
-def verify():
-    err = require_rc_auth()
-    if err: return err
-    return jsonify({"ok": True})
+
+# ── OAuth routes ───────────────────────────────────────────────────────────────
+
+@app.route("/auth/login")
+def auth_login():
+    state = secrets.token_urlsafe(16)
+    session["oauth_state"] = state
+    params = (
+        f"?response_type=code"
+        f"&client_id={RC_CLIENT_ID}"
+        f"&redirect_uri={RC_REDIRECT_URI}"
+        f"&state={state}"
+    )
+    return redirect(RC_AUTH_URL + params)
+
+
+@app.route("/auth/callback")
+def auth_callback():
+    error = request.args.get("error")
+    if error:
+        return f"OAuth error: {error}", 400
+
+    state = request.args.get("state", "")
+    if state != session.pop("oauth_state", None):
+        return "Invalid state parameter", 400
+
+    code = request.args.get("code", "")
+    if not code:
+        return "Missing authorization code", 400
+
+    # Exchange code for token
+    try:
+        token_resp = http_requests.post(
+            RC_TOKEN_URL,
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": RC_REDIRECT_URI,
+            },
+            auth=(RC_CLIENT_ID, RC_CLIENT_SECRET),
+            timeout=10,
+        )
+        token_resp.raise_for_status()
+        token_data = token_resp.json()
+    except Exception as e:
+        return f"Token exchange failed: {e}", 500
+
+    access_token = token_data.get("access_token", "")
+
+    # Fetch user profile to get email
+    try:
+        userinfo_resp = http_requests.get(
+            RC_USERINFO_URL,
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        userinfo_resp.raise_for_status()
+        userinfo = userinfo_resp.json()
+    except Exception as e:
+        return f"Failed to fetch user info: {e}", 500
+
+    email = (userinfo.get("email") or "").strip().lower()
+    name  = userinfo.get("name") or userinfo.get("given_name") or email
+
+    if not email.endswith("@ringcentral.com"):
+        return "Access denied — RingCentral employees only.", 403
+
+    session["user_email"] = email
+    session["user_name"]  = name
+    session.permanent = True
+
+    log_to_sheet(email)
+    return redirect("/")
+
+
+@app.route("/auth/logout")
+def auth_logout():
+    session.clear()
+    return redirect("/")
+
+
+@app.route("/auth/me")
+def auth_me():
+    email = current_user()
+    if not email:
+        return jsonify({"authenticated": False}), 401
+    return jsonify({"authenticated": True, "email": email, "name": session.get("user_name", email)})
+
+
+# ── App routes ─────────────────────────────────────────────────────────────────
+
+@app.route("/")
+def index():
+    return send_from_directory("static", "index.html")
+
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
 
 
 @app.route("/api/generate", methods=["POST"])
 def generate():
-    auth_err = require_rc_auth()
+    auth_err = require_auth()
     if auth_err: return auth_err
 
     data = request.get_json(silent=True)
-    log_to_sheet(request.headers.get("X-User-Email", ""), (data or {}).get("url", ""))
+    log_to_sheet(current_user(), (data or {}).get("url", ""))
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
         return jsonify({"error": "ANTHROPIC_API_KEY not set on server"}), 500
@@ -133,14 +227,12 @@ def generate():
 
     # Resolve website content
     if "__WEBSITE_CONTENT__" in prompt:
-        url = data.get("url", "").strip()
+        url    = data.get("url", "").strip()
         pasted = data.get("pasted", "").strip()
 
         if pasted and len(pasted) > 50:
-            # Pasted content always takes priority
             site_content = pasted[:15000]
         elif url:
-            # Auto-fetch via Firecrawl
             content, error = fetch_via_firecrawl(url)
             if content is None:
                 if error == "CAPTCHA_PROTECTED":
@@ -181,11 +273,11 @@ def generate():
 
 @app.route("/api/suggest", methods=["POST"])
 def suggest():
-    auth_err = require_rc_auth()
+    auth_err = require_auth()
     if auth_err: return auth_err
 
     data = request.get_json(silent=True)
-    url = (data or {}).get("url", "").strip()
+    url  = (data or {}).get("url", "").strip()
     if not url:
         return jsonify({"error": "Missing URL"}), 400
 
@@ -220,7 +312,7 @@ Output ONLY the numbered list, nothing else. Example format:
 
 @app.route("/api/export", methods=["POST"])
 def export_docx():
-    auth_err = require_rc_auth()
+    auth_err = require_auth()
     if auth_err: return auth_err
 
     from docx_generator import generate_docx
@@ -228,13 +320,13 @@ def export_docx():
     if not data or "content" not in data:
         return jsonify({"error": "Missing content"}), 400
 
-    biz_name = data.get("bizName", "Practice").replace('**', '').replace('*', '').strip()
+    biz_name    = data.get("bizName", "Practice").replace('**', '').replace('*', '').strip()
     prepared_by = data.get("preparedBy", "RingCentral SE")
     content_text = data.get("content", "")
 
     try:
         docx_bytes = generate_docx(biz_name, content_text, prepared_by)
-        safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', biz_name)[:40]
+        safe_name  = re.sub(r'[^a-zA-Z0-9_-]', '_', biz_name)[:40]
         return Response(
             docx_bytes,
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -243,8 +335,7 @@ def export_docx():
     except Exception as e:
         import traceback
         print("Export error:", traceback.format_exc())
-        return jsonify({"error": "Doc generation failed", "detail": str(e)}), 500
-
+        return jsonify({"error": "Doc generation failed"}), 500
 
 
 if __name__ == "__main__":
