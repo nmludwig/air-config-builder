@@ -381,9 +381,9 @@ Generate the complete AIR configuration using EXACTLY this structure and numberi
 
 ## 1.3 Recommended AIR Persona
 
-**Name:** [chosen name]
-**Why:** [2-3 sentences — physician cultural background first, then location demographics, industry fit, voice clarity]
-**Tone:** [1-2 sentences — why this tone fits this specific caller population]
+**Name** [chosen name]
+**Why** [2-3 sentences — physician cultural background first, then location demographics, industry fit, voice clarity]
+**Tone** [1-2 sentences — why this tone fits this specific caller population]
 
 # 2. AIR Setup — Field by Field
 
@@ -472,13 +472,13 @@ When AIR ingests a URL or document, its backend does three things automatically:
 2. Embeds — converts each chunk into a vector (a list of numbers representing meaning) and stores it in a vector database
 3. Retrieves — when a caller asks a question, AIR finds the closest-matching chunks and uses them to generate an answer
 
-**The problem with uploading full web pages:** A full webpage contains multiple topics on the same page. The chunker doesn't understand where one topic ends and another begins — it just cuts at character limits. The result is chunks that blend topics together. When a caller asks about insurance, AIR may retrieve a chunk that mixes insurance rules with surgical details and produce a wrong, blended answer.
+**The problem with uploading full web pages**: A full webpage contains multiple topics on the same page. The chunker doesn't understand where one topic ends and another begins — it just cuts at character limits. The result is chunks that blend topics together. When a caller asks about insurance, AIR may retrieve a chunk that mixes insurance rules with surgical details and produce a wrong, blended answer.
 
 **The fix — upload plain .txt files, one topic per file.** A plain .txt file is the cleanest format for RAG ingestion: no HTML tags, no navigation menus, no footers, no cookie banners polluting the chunks. Each file covers exactly one topic in 300–500 words of clean prose.
 
-> ℹ️ **Why .txt and not HTML or PDF:** HTML pages drag in navigation, footers, ads, and scripts that get chunked alongside the real content. PDFs can have column layouts that confuse chunkers. A .txt file is pure content — every word the chunker sees is something you intentionally put there.
+> ℹ️ **Why .txt and not HTML or PDF**: HTML pages drag in navigation, footers, ads, and scripts that get chunked alongside the real content. PDFs can have column layouts that confuse chunkers. A .txt file is pure content — every word the chunker sees is something you intentionally put there.
 
-**How to create each file:** Open a text editor (TextEdit on Mac, Notepad on Windows). Paste in the ready-to-paste content provided below. Save with the exact filename shown. Upload to AIR Knowledge Base.
+**How to create each file**: Open a text editor (TextEdit on Mac, Notepad on Windows). Paste in the ready-to-paste content provided below. Save with the exact filename shown. Upload to AIR Knowledge Base.
 
 ## 3.2 .txt Files to Create & Upload
 
@@ -662,7 +662,7 @@ This section is for the SE to use during the discovery conversation. Present it 
 
 *"AIR is your new receptionist on Day 1 — eager, capable, working from the training you gave her. AIR Pro is that same person after two years on the job. She doesn't need to be told what to do next. She already knows."*
 
-**The key insight:** The jump from AIR to AIR Pro isn't a different product — it's a maturity curve. Start with AIR, get value immediately, grow into AIR Pro as workflows get more complex. You don't replace the receptionist. You invest in her.
+**The key insight**: The jump from AIR to AIR Pro isn't a different product — it's a maturity curve. Start with AIR, get value immediately, grow into AIR Pro as workflows get more complex. You don't replace the receptionist. You invest in her.
 
 ## Call Reasons That AIR Handles Today vs. AIR Pro Tomorrow
 

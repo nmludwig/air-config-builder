@@ -262,7 +262,7 @@ def generate():
     def stream():
         with client.messages.stream(
             model="claude-opus-4-8",
-            max_tokens=16000,
+            max_tokens=32000,
             messages=[{"role": "user", "content": prompt}],
         ) as s:
             for text in s.text_stream:
