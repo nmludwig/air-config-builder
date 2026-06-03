@@ -5,7 +5,6 @@ A web app for RingCentral Solutions Engineers to generate complete, copy-paste-r
 
 ## Live URLs
 - **RingCentral internal:** https://air-config-builder.celab.ringcentral.com/
-- **Render (backup):** https://air-config-builder.onrender.com
 - **GitHub:** https://github.com/nmludwig/air-config-builder (private)
 
 ## Server Details
@@ -22,7 +21,6 @@ A web app for RingCentral Solutions Engineers to generate complete, copy-paste-r
 - docx_generator.py — Python Word doc generator (python-docx)
 - static/index.html — Full frontend, single file, contains the Claude prompt
 - requirements.txt — flask, anthropic, gunicorn, python-dotenv, python-docx
-- render.yaml — Render deployment config
 
 ## The Claude Prompt
 Lives inside buildPrompt() in static/index.html as a JS template literal. Uses __WEBSITE_CONTENT__ placeholder replaced server-side with Firecrawl content. Outputs 7 sections matching the Dr. Liu AIR Configuration Playbook format.

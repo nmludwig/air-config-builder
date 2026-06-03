@@ -106,7 +106,7 @@ python app.py
 air-config-builder/
 ├── app.py              # Flask server — Firecrawl fetch + Anthropic API proxy with SSE streaming
 ├── requirements.txt    # Python dependencies
-├── render.yaml         # Render deployment config
+├── docx_generator.py   # Word doc generator (python-docx)
 ├── .env.example        # Environment variable template
 ├── .gitignore
 └── static/

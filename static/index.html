@@ -713,7 +713,7 @@ async function generate() {
 
   } catch (e) {
     el.classList.remove('blink', 'streaming');
-    el.textContent = 'Error: ' + e.message + '\n\nMake sure ANTHROPIC_API_KEY is set in Render environment variables.';
+    el.textContent = 'Error: ' + e.message + '\n\nIf this persists, you may need to sign in again.';
   }
 
   btn.disabled = false;
