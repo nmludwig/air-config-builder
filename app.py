@@ -261,7 +261,7 @@ def generate():
 
     def stream():
         with client.messages.stream(
-            model="claude-sonnet-4-5",
+            model="claude-opus-4-8",
             max_tokens=16000,
             messages=[{"role": "user", "content": prompt}],
         ) as s:
