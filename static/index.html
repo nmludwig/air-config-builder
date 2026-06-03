@@ -454,23 +454,34 @@ DARK_BOX: "[exact after-hours script]"
 
 Format this section as THREE separate tables so the SE can scan and act immediately:
 
-TABLE 1 — URLs to Add (2 columns: URL | What It Contributes)
-| URL | What It Contributes |
-|---|---|
-| [exact full URL] | [1 sentence — what AIR learns from this page] |
-[one row per URL]
+⚠️ CHUNKING STRATEGY — CRITICAL FOR RAG QUALITY:
+When AIR ingests a URL or document, the backend splits it into chunks, embeds each chunk as a vector, and stores them in a vector database. When a caller asks a question, AIR retrieves the closest-matching chunks and generates an answer from them.
 
-TABLE 2 — Documents to Request from Office (2 columns: Document | Why It Helps)
-| Document | Why It Helps |
-|---|---|
-| [document name] | [what AIR learns from it] |
-[one row per document]
+The problem: most RAG chunkers split by character count or paragraph breaks — not topic boundaries. A full webpage often produces chunks that mix multiple topics (e.g., "robotic surgery... non-mesh repair... insurance verification..."). When retrieved together, these blended chunks cause AIR to produce confused or blended answers.
 
-TABLE 3 — Must NOT Upload (2 columns: Do Not Upload | Reason)
+The fix: upload SHORT, SINGLE-TOPIC documents (300–500 words max each). One topic per document = one clean retrieval unit = accurate answers.
+
+TABLE 1 — Topic-Focused Documents to Create & Upload
+For each item below, specify: what to extract from the website, what to name the file, and what NOT to include (keep topics isolated).
+| Document Name | Source / What to Extract | Topic Covered | Max Length | Do NOT Include |
+|---|---|---|---|---|
+| [filename.txt] | [exact URL or "request from office"] | [single topic only] | [word count] | [other topics that must stay separate] |
+[one row per document — aim for 6-10 focused documents, not 2-3 full pages]
+
+TABLE 2 — URLs to Add Directly (only if page is already single-topic)
+| URL | What It Contributes | Chunking Risk |
+|---|---|---|
+| [exact full URL] | [what AIR learns] | [Low / Medium / High — flag if page mixes topics] |
+
+TABLE 3 — Documents to Request from Office
+| Document | Why It Helps | Topic Isolation Note |
+|---|---|---|
+| [document name] | [what AIR learns from it] | [how to keep it focused] |
+
+TABLE 4 — Must NOT Upload
 | Do Not Upload | Reason |
 |---|---|
 | [item] | [why it must not be uploaded] |
-[one row per item]
 
 # 3. Skills Configuration
 
@@ -513,17 +524,30 @@ For EACH FAQ entry use EXACTLY this format — no variations:
 
 [SMS template and setup specific to this practice]
 
-# 4. Determinism Strategy
+# 4. LLM Behavior & Determinism Strategy
 (SE Reference — not entered into any AIR field)
 
 ## 4.1 High-Determinism Facts — Must Go in FAQ Skill
-[List specific facts from this practice that must be exact]
+[List specific facts from this practice that must be stated exactly — prices, hours, addresses, insurance accepted, policy statements. These cannot live in the KB because RAG paraphrases.]
 
 ## 4.2 Low-Determinism Content — Knowledge Base Is Fine
-[List topics where paraphrasing is acceptable]
+[List topics where paraphrasing is acceptable — general service descriptions, background on procedures, practice philosophy. RAG retrieval + LLM paraphrase is fine here.]
 
-## 4.3 Non-Determinism Risk Flags
-[Which FAQ answers are most at risk? Flag and explain]
+## 4.3 Hallucination Risk Flags
+[Which FAQ answers are most at risk of hallucination? Flag each one and explain why. Common risks: clinical details, specific statistics, insurance eligibility, pricing. For each flag, recommend either: (a) move to FAQ with exact answer, (b) add explicit prohibition to Company Description, or (c) route to staff.]
+
+## 4.4 FAQ Answer Length Audit
+AIR answers are token-limited in delivery — long answers get cut off mid-sentence during real calls. Audit every FAQ answer:
+[For each FAQ answer over ~40 words, flag it here and recommend a shortened version. Target: each answer should be speakable in under 20 seconds (~50 words max).]
+
+## 4.5 Context Window & Self-Contained Answers
+LLMs degrade over long conversations — earlier context becomes less reliable as the call continues. Every FAQ answer must be fully self-contained: it should make sense even if it's the first thing AIR says, with no dependency on prior conversation turns.
+[Flag any FAQ answers that assume prior context and rewrite them to be standalone.]
+
+## 4.6 Frustration Escalation Path
+When AIR fails to understand a caller 2-3 times in a row, it must not keep guessing — it should offer to transfer to staff. Add this instruction to the Company Description:
+[Recommended escalation phrase: "If you are unsure how to help after two attempts, say: 'I want to make sure you get the right help — let me connect you with our team.' Then trigger a transfer."]
+[Also note: which Transfer by Context rule should catch unresolved intents as a safety net?]
 
 # 5. Admin Portal Setup Checklist
 
