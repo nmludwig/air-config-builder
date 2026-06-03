@@ -447,72 +447,80 @@ DARK_BOX: "[exact after-hours script]"
 
 [Warning callout: "! | After-hours safety: [note about emergency redirect importance for this practice type]"]
 
-## 2.5 Knowledge Base Strategy
+# 3. Knowledge Base Strategy
+
 (Admin Portal → Knowledge Hub → Add Knowledge Base — MIXED DETERMINISTIC)
 
-⚠️ MIXED DETERMINISTIC: AIR paraphrases content from the knowledge base — variation is normal here. Use KB for background context. Use FAQ skill for facts that must be stated exactly.
+⚠️ MIXED DETERMINISTIC: AIR paraphrases knowledge base content — variation is normal here. Use the KB for background context. Use the FAQ skill for facts that must be stated exactly.
 
----
-
-### Why Chunking Determines Whether AIR Gives Accurate Answers
+## 3.1 Why Chunking Determines Answer Accuracy
 
 When AIR ingests a URL or document, its backend does three things automatically:
-1. **Chunks** — splits the content into small pieces (usually 300–600 words) by character count or paragraph breaks
-2. **Embeds** — converts each chunk into a vector (a list of numbers representing meaning) and stores it in a vector database
-3. **Retrieves** — when a caller asks a question, AIR finds the closest-matching chunks and uses them to generate an answer
+1. Chunks — splits the content into small pieces (usually 300–600 words) by character count or paragraph breaks
+2. Embeds — converts each chunk into a vector (a list of numbers representing meaning) and stores it in a vector database
+3. Retrieves — when a caller asks a question, AIR finds the closest-matching chunks and uses them to generate an answer
 
-**The problem with uploading full web pages:**
-A full webpage like the homepage of this business contains multiple topics on the same page. The chunker doesn't understand where one topic ends and another begins — it just cuts at character limits. The result is chunks that blend topics together, like:
+**The problem with uploading full web pages:** A full webpage contains multiple topics on the same page. The chunker doesn't understand where one topic ends and another begins — it just cuts at character limits. The result is chunks that blend topics together. When a caller asks about insurance, AIR may retrieve a chunk that mixes insurance rules with surgical details and produce a wrong, blended answer.
 
-> *"...single-port robotic surgery uses a 1.8cm incision... mesh removal is available for patients with complications... Medi-Cal is only accepted for Orange County residents..."*
+**The fix — upload plain .txt files, one topic per file.** A plain .txt file is the cleanest format for RAG ingestion: no HTML tags, no navigation menus, no footers, no cookie banners polluting the chunks. Each file covers exactly one topic in 300–500 words of clean prose.
 
-When a caller asks about Medi-Cal, AIR may retrieve that mixed chunk and produce an answer that incorrectly blends insurance info with surgical details.
+> ℹ️ **Why .txt and not HTML or PDF:** HTML pages drag in navigation, footers, ads, and scripts that get chunked alongside the real content. PDFs can have column layouts that confuse chunkers. A .txt file is pure content — every word the chunker sees is something you intentionally put there.
 
-**The fix — upload plain .txt files, one topic per file:**
-A plain .txt file is the cleanest format for RAG ingestion — no HTML tags, no navigation menus, no footer text, no cookie banners polluting the chunks. Each file should cover exactly one topic, written in 300–500 words of clean prose.
+**How to create each file:** Open a text editor (TextEdit on Mac, Notepad on Windows). Paste in the ready-to-paste content provided below. Save with the exact filename shown. Upload to AIR Knowledge Base.
 
-Why .txt specifically:
-- HTML pages include navigation, footers, ads, and scripts that get chunked alongside the real content
-- PDFs can have column layout issues that confuse chunkers
-- .txt is pure content — every word the chunker sees is something you intentionally put there
+## 3.2 .txt Files to Create & Upload
 
-**How to create them:** Open a text editor (TextEdit on Mac, Notepad on Windows). Copy only the relevant section from the website. Paste as plain text. Save as filename.txt. Upload to AIR Knowledge Base.
+Generate 6–10 files below — one per distinct topic found on this business's website. For EACH file, output EXACTLY this block format, numbered sequentially. The fenced content block must contain fully written, clean prose (300–500 words) drafted from the website content — NOT a description of what to copy. The SE copies the box verbatim, saves it as the filename, and uploads it.
 
----
+### File 1 — [descriptive_filename.txt]
 
-### TABLE 1 — .txt Files to Create & Upload (one topic per file)
+**Topic** [the single topic this file covers]
+**Source** [which website section/page this was drawn from]
+**Do NOT include** [adjacent topics that must stay in their own separate files]
 
-For each file: copy ONLY the relevant section from the website, paste as plain text, save as .txt, upload to AIR Knowledge Base.
+Ready-to-paste content — save as [descriptive_filename.txt]:
 
-| File Name | What to Copy From Website | Topic | Target Length | Do NOT Include |
-|---|---|---|---|---|
-| [filename.txt] | [exact section or URL to extract from] | [single topic only] | [~300 words] | [other topics that must stay in separate files] |
+\`\`\`
+[Fully written 300–500 words of clean, single-topic prose drafted from the website. No headings, no bullets, no marketing fluff — just the factual content AIR needs to answer questions on this one topic.]
+\`\`\`
 
-[Generate 6–10 rows — one per distinct topic found on this business's website. Flag which website pages mix multiple topics and should NOT be uploaded whole.]
+### File 2 — [descriptive_filename.txt]
 
-### TABLE 2 — URLs Safe to Add Directly (single-topic pages only)
+**Topic** [single topic]
+**Source** [website section]
+**Do NOT include** [adjacent topics]
 
-Only add a URL directly if that page covers exactly one topic. Flag chunking risk.
+Ready-to-paste content — save as [descriptive_filename.txt]:
 
-| URL | Topic | Chunking Risk | Notes |
-|---|---|---|---|
-| [URL] | [topic] | LOW / MEDIUM / HIGH | [if HIGH, extract to .txt instead] |
+\`\`\`
+[Fully written 300–500 words of clean single-topic prose.]
+\`\`\`
 
-### TABLE 3 — Documents to Request from Office
+[Continue this exact numbered pattern — File 3, File 4, etc. — for every distinct topic, 6–10 files total. Each gets its own ### File N heading, its own three label lines, and its own fenced ready-to-paste content box.]
 
-| Document | Topic | Why It Helps |
-|---|---|---|
-| [document name] | [topic] | [what AIR learns] |
+## 3.3 URLs Safe to Add Directly
 
-### TABLE 4 — Do NOT Upload
+Only add a URL directly if that page covers exactly ONE topic. If a page mixes topics, do NOT add the URL — extract it to a .txt file in 3.2 instead. Two-column table:
 
-| Item | Why |
+| URL (single-topic pages only) | Topic + Chunking Risk |
+|---|---|
+| [URL] | [topic] — Risk: LOW / MEDIUM / HIGH [if HIGH, note: extract to .txt instead] |
+
+## 3.4 Documents to Request from the Office
+
+| Document to Request | Why It Helps AIR |
+|---|---|
+| [document name] | [what AIR learns and which call reasons it covers] |
+
+## 3.5 Do NOT Upload
+
+| Item | Why Not |
 |---|---|
 | [item] | [reason] |
 
-# 3. Skills Configuration
+# 4. Skills Configuration
 
-## 3.1 FAQ Entries — Maximum 10
+## 4.1 FAQ Entries — Maximum 10
 (Admin Portal → Skills → Frequently Asked Questions → Add — HARD DETERMINISTIC)
 
 Enter each Q&A pair in the FAQ skill. Left column = question variants callers say. Right column = exact text AIR speaks.
@@ -531,7 +539,7 @@ For EACH FAQ entry use EXACTLY this format — no variations:
 
 [Repeat for each FAQ — max 10 total]
 
-## 3.2 Transfer by Context Rules
+## 4.2 Transfer by Context Rules
 (Admin Portal → Skills → Transfer by Context → Add Rule — SOFT DETERMINISTIC)
 
 [Three-column table for ALL routing rules:]
@@ -541,54 +549,54 @@ For EACH FAQ entry use EXACTLY this format — no variations:
 
 [Repeat rows for each rule — max 10]
 
-## 3.3 Appointment Booking Setup
+## 4.3 Appointment Booking Setup
 (Admin Portal → Skills → Appointment Booking)
 
 [Setup instructions specific to this practice]
 
-## 3.4 SMS Configuration
+## 4.4 SMS Configuration
 (Admin Portal → Skills → Send Text Messages)
 
 [SMS template and setup specific to this practice]
 
-# 4. LLM Behavior & Determinism Strategy
+# 5. LLM Behavior & Determinism Strategy
 (SE Reference — not entered into any AIR field)
 
-## 4.1 High-Determinism Facts — Must Go in FAQ Skill
+## 5.1 High-Determinism Facts — Must Go in FAQ Skill
 [List specific facts from this practice that must be stated exactly — prices, hours, addresses, insurance accepted, policy statements. These cannot live in the KB because RAG paraphrases.]
 
-## 4.2 Low-Determinism Content — Knowledge Base Is Fine
+## 5.2 Low-Determinism Content — Knowledge Base Is Fine
 [List topics where paraphrasing is acceptable — general service descriptions, background on procedures, practice philosophy. RAG retrieval + LLM paraphrase is fine here.]
 
-## 4.3 Hallucination Risk Flags
+## 5.3 Hallucination Risk Flags
 [Which FAQ answers are most at risk of hallucination? Flag each one and explain why. Common risks: clinical details, specific statistics, insurance eligibility, pricing. For each flag, recommend either: (a) move to FAQ with exact answer, (b) add explicit prohibition to Company Description, or (c) route to staff.]
 
-## 4.4 FAQ Answer Length Audit
+## 5.4 FAQ Answer Length Audit
 AIR answers are token-limited in delivery — long answers get cut off mid-sentence during real calls. Audit every FAQ answer:
 [For each FAQ answer over ~40 words, flag it here and recommend a shortened version. Target: each answer should be speakable in under 20 seconds (~50 words max).]
 
-## 4.5 Context Window & Self-Contained Answers
+## 5.5 Context Window & Self-Contained Answers
 LLMs degrade over long conversations — earlier context becomes less reliable as the call continues. Every FAQ answer must be fully self-contained: it should make sense even if it's the first thing AIR says, with no dependency on prior conversation turns.
 [Flag any FAQ answers that assume prior context and rewrite them to be standalone.]
 
-## 4.6 Frustration Escalation Path
+## 5.6 Frustration Escalation Path
 When AIR fails to understand a caller 2-3 times in a row, it must not keep guessing — it should offer to transfer to staff. Add this instruction to the Company Description:
 [Recommended escalation phrase: "If you are unsure how to help after two attempts, say: 'I want to make sure you get the right help — let me connect you with our team.' Then trigger a transfer."]
 [Also note: which Transfer by Context rule should catch unresolved intents as a safety net?]
 
-# 5. Admin Portal Setup Checklist
+# 6. Admin Portal Setup Checklist
 
 [Numbered step-by-step sequence through service.ringcentral.com referencing specific values above]
 
-# 6. Recommendations — Make This Deployment Better
+# 7. Recommendations — Make This Deployment Better
 
 [Bullet points covering: demographics/language gaps, KB gaps, routing gaps, skills not enabled, risk flags. Be specific to this business — no generic advice.]
 
-# 7. Recommendations — Improve the Persona
+# 8. Recommendations — Improve the Persona
 
 [Bullet points covering: greeting quality for voice, FAQ answer quality review, non-determinism risks, what the persona should always/never say, demo wow moments specific to this business]
 
-# 8. AIR vs. AIR Pro — The Maturity Curve
+# 9. AIR vs. AIR Pro — The Maturity Curve
 
 This section is for the SE to use during the discovery conversation. Present it after walking through the configuration.
 
