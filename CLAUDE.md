@@ -38,10 +38,8 @@ Lives inside buildPrompt() in static/index.html as a JS template literal. Uses _
 Matches Dr. Liu AIR Configuration Playbook style:
 - Navy H1 with blue bottom border, blue H2, blue H3
 - Coverage plan table: green/amber/red colored AIR Handles? column
-- FAQ tables: navy header QUESTION | ANSWER, italic questions left, answers right
-- Routing table: 3-col TRIGGER KEYWORDS | ROUTE TO | COVERS
-- Copy box: green-tinted Courier New for company description
-- Dark navy box: white italic for greetings
+- **Green copy box (green-tinted Courier New) for EVERY paste-able AIR field** — this is the unified convention: Company Description, Custom Greetings (business hours + after hours), FAQ question variants AND answers, Transfer-by-Context trigger keywords, SMS message text, Lead Capture intake questions, and Knowledge Base .txt files. In the prompt these are emitted as fenced code blocks (```), which the renderer turns into the green box via add_copy_box.
+- Non-copyable context (Route to / Covers / Holding message labels, etc.) renders as bold-label lines, NOT boxes
 - Callout boxes: blue info (i), amber warning (!), red danger (!), green success (checkmark)
 - Page break between every major section
 

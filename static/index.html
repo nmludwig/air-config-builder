@@ -439,7 +439,11 @@ Write the exact script. Follow this structure EXACTLY — do not deviate:
 
 DO NOT mention the doctor's credentials or marketing copy in the greeting. The caller already called — they know who the doctor is. Just tell them what AIR can do.
 
-DARK_BOX: "[exact greeting script]"
+Output the exact greeting inside a fenced code block (between triple backticks) so it renders as a copy box — nothing else inside the fences:
+
+\`\`\`
+[exact greeting script]
+\`\`\`
 
 ## 2.4 After-Hours Greeting
 (Admin Portal → Skills → Custom Greeting → After Hours — HARD DETERMINISTIC)
@@ -447,7 +451,11 @@ DARK_BOX: "[exact greeting script]"
 Write the exact script. Follow this structure EXACTLY:
 "Thank you for calling [practice name]. I'm [AIR name], your AI assistant. Our office is currently closed. [What AIR can still do after hours]. [Emergency redirect if clinical practice — always include for healthcare: 'For urgent medical concerns, please call 911 or go to your nearest emergency room.']. How can I help you?"
 
-DARK_BOX: "[exact after-hours script]"
+Output the exact after-hours script inside a fenced code block (between triple backticks) so it renders as a copy box — nothing else inside the fences:
+
+\`\`\`
+[exact after-hours script]
+\`\`\`
 
 [Warning callout: "! | After-hours safety: [note about emergency redirect importance for this practice type]"]
 
@@ -527,41 +535,81 @@ Only add a URL directly if that page covers exactly ONE topic. If a page mixes t
 ## 4.1 FAQ Entries — Maximum 10
 (Admin Portal → Skills → Frequently Asked Questions → Add — HARD DETERMINISTIC)
 
-Enter each Q&A pair in the FAQ skill. Left column = question variants callers say. Right column = exact text AIR speaks.
+Each FAQ entry has two paste-able parts: the caller phrasings (question variants) and the exact answer AIR speaks. Both go in green copy boxes.
 
 CRITICAL: Number each FAQ entry using the EXACT call reason number from the user\'s list above. If call reason #4 is "What kind of mesh does Dr. Liu use?" then the FAQ heading must be "Call Reason 4 — Mesh Type". Do not invent new numbering or generic topic names.
 
 Only include call reasons AIR can FULLY answer without system access or clinical judgment. Call reasons requiring routing (post-op symptoms, test results, surgery scheduling status, appointment confirmation) go in Transfer by Context — NOT here.
 
-For EACH FAQ entry use EXACTLY this format — no variations:
+For EACH FAQ entry use EXACTLY this format — no variations. Both fenced blocks render as copy boxes; put nothing else inside the fences:
 
 ### Call Reason [N] — [Short Topic Name matching call reason N from the user\'s list]
 
-| QUESTION (what caller says) | ANSWER (what AIR says — copy exactly) |
-|---|---|
-| [3-5 natural caller phrasings separated by " / "] | [exact answer AIR speaks — natural, warm, ends with offer to help or book. Under 20 seconds aloud.] |
+Question variants — copy into the question field:
+
+\`\`\`
+[3-5 natural caller phrasings, one per line]
+\`\`\`
+
+Answer AIR speaks — copy into the answer field:
+
+\`\`\`
+[exact answer AIR speaks — natural, warm, ends with offer to help or book. Under 50 words / 20 seconds aloud.]
+\`\`\`
 
 [Repeat for each FAQ — max 10 total]
 
 ## 4.2 Transfer by Context Rules
 (Admin Portal → Skills → Transfer by Context → Add Rule — SOFT DETERMINISTIC)
 
-[Three-column table for ALL routing rules:]
-| TRIGGER KEYWORDS / PHRASES | ROUTE TO | COVERS / NOTES |
-|---|---|---|
-| [15-20 natural caller phrases, comma separated] | [Department] | [which call reasons + AIR holding message] |
+For EACH routing rule use EXACTLY this format — max 10 rules. The keywords block renders as a copy box; put nothing else inside the fences:
 
-[Repeat rows for each rule — max 10]
+### Route [N] — [Destination / Department]
+
+Trigger keywords — copy into the keywords field:
+
+\`\`\`
+[15-20 natural caller phrases, comma separated]
+\`\`\`
+
+**Route to** [Department / extension]
+**Covers** [which call reasons this rule handles]
+**Holding message** [what AIR says as it transfers]
+
+[Repeat for each rule — max 10 total]
 
 ## 4.3 Appointment Booking Setup
 (Admin Portal → Skills → Appointment Booking)
 
 [Setup instructions specific to this practice]
 
-## 4.4 SMS Configuration
-(Admin Portal → Skills → Send Text Messages)
+## 4.4 SMS Skill
+(Admin Portal → Skills → Send Text Messages — SOFT DETERMINISTIC)
 
-[SMS template and setup specific to this practice]
+For EACH SMS template, output the message text in a green copy box. Put nothing else inside the fences:
+
+### SMS — [purpose, e.g. "Appointment confirmation"]
+
+Message text — copy into the SMS template field:
+
+\`\`\`
+[exact SMS message — concise, includes practice name, clear next step]
+\`\`\`
+
+[Repeat for each useful SMS template — typically 2-4]
+
+## 4.5 Lead Capture
+(Admin Portal → Skills → Lead Capture — MIXED DETERMINISTIC)
+
+The intake questions AIR asks to capture a new lead. Output them in a green copy box, one question per line. Put nothing else inside the fences:
+
+Intake questions — copy into the Lead Capture field:
+
+\`\`\`
+[one intake question per line — name, reason for call, callback number, preferred time, insurance if relevant — tailored to this business]
+\`\`\`
+
+**When to trigger** [which call reasons or conditions should start lead capture for this business]
 
 # 5. LLM Behavior & Determinism Strategy
 (SE Reference — not entered into any AIR field)
