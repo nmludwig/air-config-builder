@@ -735,6 +735,38 @@ The HARD / SOFT / MIXED tiering used throughout is a deliberate framing this doc
 
 ! | **Ask the AIR team about this:** The strategy doesn't address what AIR says when no KB chunk clears the similarity threshold. Most RAG systems have a configurable minimum-confidence floor below which the model should say "I don't know" and route to staff rather than hallucinate. Confirm whether AIR exposes this — it's the difference between a safe miss and a confident wrong answer.
 
+# 11. Demo-Day SE Playbook
+
+Reproduce this section exactly as written below. It is fixed enablement content for the SE — do NOT rewrite, summarize, or tailor it to the business. Output it verbatim, including the callouts and table.
+
+i | **For the SE, not the customer:** Read this before you walk into the demo. Built from real AIR field experience (Protech Staffing demo + Ford Plastic Surgery case + SE team field notes). The goal is simple: never get surprised live.
+
+## 11.1 The Five Rules of AIR SE Enablement
+
+- **Never demo cold.** Test the exact config on a live call in the last 24 hours. Test Chat is a development sandbox — the live call is the source of truth.
+- **Every failure has a reframe.** Know them before you walk in. Surprises are features if you're ready for them.
+- **Set the non-determinism expectation first.** One sentence before call 1 reframes everything that follows: the output varies, the intent doesn't.
+- **Show the call log.** The AI summary after every call is often more impressive than the call itself. Screenshot it before the demo.
+- **Use the right AIR tool for the right instruction.** FAQ for exact phrases. Transfer by Context for routing. Prohibition in Company Description for suppression. TXT file for knowledge retrieval. Never fight the architecture.
+
+## 11.2 The Reframe Library — Every Failure Has a Line
+
+When AIR does something unexpected in the demo, don't apologize — reframe it. Each line turns a perceived failure into a teaching moment.
+
+| If AIR does this | Say this |
+| Mispronounces the company name | "Easy fix — the greeting text controls pronunciation. We update it before go-live using a hyphen or phonetic spelling (e.g., Pro-Tech instead of Protech)." |
+| Doesn't read specific listings | "The Knowledge Base pulls from a static snapshot. Connect it to a live URL or update the TXT file and it references current info dynamically." |
+| Responds differently than last time | "That's non-determinism — the AI generates a real response every time, not a recording. That's what makes callers stay on the line." |
+| Lead Capture doesn't fire | "Watch the call summary instead — AIR captured company name, intent, and context from natural conversation. That's the warm handoff." |
+| SMS doesn't auto-send | "AIR confirms consent before texting — that's by design. Watch what happens when the caller asks for it." |
+| Says it doesn't have the information | "The document format is likely the issue — PDF tables don't retrieve well. Convert to plain TXT with Q&A structure and re-upload." |
+| Lists options instead of asking an open question | "Add a prohibition to the Company Description: 'Never present a numbered or bulleted list of options to the caller.'" |
+| Transfers without collecting intake info | "Add a prohibition: 'Never transfer a caller without first asking [qualifying question].' Also add an FAQ entry as a hard-mapped fallback." |
+
+## 11.3 Why Document Format Is the #1 Knowledge Base Failure
+
+! | **Root cause:** AIR's Knowledge Base does not read PDFs the way a human does. It extracts text and tries to match it conversationally against what the caller asks. Formatted PDFs — price lists, job listings, service menus with tables, columns, and structured layouts — produce garbled text extraction. AIR effectively sees an empty document even though the file uploaded successfully. The file size, toggle state, and upload are all irrelevant. The problem is format. Always convert to plain TXT in question-and-answer form (see Section 3).
+
 ---
 
 Complete ALL sections. Use the exact section numbers and headers shown. An SE will use this live with a real customer today.`;
