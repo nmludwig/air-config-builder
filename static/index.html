@@ -452,36 +452,63 @@ DARK_BOX: "[exact after-hours script]"
 
 ⚠️ MIXED DETERMINISTIC: AIR paraphrases content from the knowledge base — variation is normal here. Use KB for background context. Use FAQ skill for facts that must be stated exactly.
 
-Format this section as THREE separate tables so the SE can scan and act immediately:
+---
 
-⚠️ CHUNKING STRATEGY — CRITICAL FOR RAG QUALITY:
-When AIR ingests a URL or document, the backend splits it into chunks, embeds each chunk as a vector, and stores them in a vector database. When a caller asks a question, AIR retrieves the closest-matching chunks and generates an answer from them.
+### Why Chunking Determines Whether AIR Gives Accurate Answers
 
-The problem: most RAG chunkers split by character count or paragraph breaks — not topic boundaries. A full webpage often produces chunks that mix multiple topics (e.g., "robotic surgery... non-mesh repair... insurance verification..."). When retrieved together, these blended chunks cause AIR to produce confused or blended answers.
+When AIR ingests a URL or document, its backend does three things automatically:
+1. **Chunks** — splits the content into small pieces (usually 300–600 words) by character count or paragraph breaks
+2. **Embeds** — converts each chunk into a vector (a list of numbers representing meaning) and stores it in a vector database
+3. **Retrieves** — when a caller asks a question, AIR finds the closest-matching chunks and uses them to generate an answer
 
-The fix: upload SHORT, SINGLE-TOPIC documents (300–500 words max each). One topic per document = one clean retrieval unit = accurate answers.
+**The problem with uploading full web pages:**
+A full webpage like the homepage of this business contains multiple topics on the same page. The chunker doesn't understand where one topic ends and another begins — it just cuts at character limits. The result is chunks that blend topics together, like:
 
-TABLE 1 — Topic-Focused Documents to Create & Upload
-For each item below, specify: what to extract from the website, what to name the file, and what NOT to include (keep topics isolated).
-| Document Name | Source / What to Extract | Topic Covered | Max Length | Do NOT Include |
+> *"...single-port robotic surgery uses a 1.8cm incision... mesh removal is available for patients with complications... Medi-Cal is only accepted for Orange County residents..."*
+
+When a caller asks about Medi-Cal, AIR may retrieve that mixed chunk and produce an answer that incorrectly blends insurance info with surgical details.
+
+**The fix — upload plain .txt files, one topic per file:**
+A plain .txt file is the cleanest format for RAG ingestion — no HTML tags, no navigation menus, no footer text, no cookie banners polluting the chunks. Each file should cover exactly one topic, written in 300–500 words of clean prose.
+
+Why .txt specifically:
+- HTML pages include navigation, footers, ads, and scripts that get chunked alongside the real content
+- PDFs can have column layout issues that confuse chunkers
+- .txt is pure content — every word the chunker sees is something you intentionally put there
+
+**How to create them:** Open a text editor (TextEdit on Mac, Notepad on Windows). Copy only the relevant section from the website. Paste as plain text. Save as filename.txt. Upload to AIR Knowledge Base.
+
+---
+
+### TABLE 1 — .txt Files to Create & Upload (one topic per file)
+
+For each file: copy ONLY the relevant section from the website, paste as plain text, save as .txt, upload to AIR Knowledge Base.
+
+| File Name | What to Copy From Website | Topic | Target Length | Do NOT Include |
 |---|---|---|---|---|
-| [filename.txt] | [exact URL or "request from office"] | [single topic only] | [word count] | [other topics that must stay separate] |
-[one row per document — aim for 6-10 focused documents, not 2-3 full pages]
+| [filename.txt] | [exact section or URL to extract from] | [single topic only] | [~300 words] | [other topics that must stay in separate files] |
 
-TABLE 2 — URLs to Add Directly (only if page is already single-topic)
-| URL | What It Contributes | Chunking Risk |
+[Generate 6–10 rows — one per distinct topic found on this business's website. Flag which website pages mix multiple topics and should NOT be uploaded whole.]
+
+### TABLE 2 — URLs Safe to Add Directly (single-topic pages only)
+
+Only add a URL directly if that page covers exactly one topic. Flag chunking risk.
+
+| URL | Topic | Chunking Risk | Notes |
+|---|---|---|---|
+| [URL] | [topic] | LOW / MEDIUM / HIGH | [if HIGH, extract to .txt instead] |
+
+### TABLE 3 — Documents to Request from Office
+
+| Document | Topic | Why It Helps |
 |---|---|---|
-| [exact full URL] | [what AIR learns] | [Low / Medium / High — flag if page mixes topics] |
+| [document name] | [topic] | [what AIR learns] |
 
-TABLE 3 — Documents to Request from Office
-| Document | Why It Helps | Topic Isolation Note |
-|---|---|---|
-| [document name] | [what AIR learns from it] | [how to keep it focused] |
+### TABLE 4 — Do NOT Upload
 
-TABLE 4 — Must NOT Upload
-| Do Not Upload | Reason |
+| Item | Why |
 |---|---|
-| [item] | [why it must not be uploaded] |
+| [item] | [reason] |
 
 # 3. Skills Configuration
 
@@ -555,16 +582,41 @@ When AIR fails to understand a caller 2-3 times in a row, it must not keep guess
 
 # 6. Recommendations — Make This Deployment Better
 
-[Bullet points covering: demographics/language gaps, KB gaps, routing gaps, skills not enabled, risk flags.
-
-ALWAYS include an AIR Pro upsell paragraph at the end of this section using this framing:
-AIR is the receptionist on Day 1 — eager, capable, working from the training you gave her. AIR Pro is that same person after two years on the job. She doesn't need to be told what to do next — she already knows.
-
-Specifically flag which of this prospect's call reasons would be better handled by AIR Pro (multi-step tasks, authentication on behalf of callers, complex workflow routing, guided troubleshooting). Frame it as a maturity curve: start with AIR, get value immediately, grow into AIR Pro as workflows get more complex.]
+[Bullet points covering: demographics/language gaps, KB gaps, routing gaps, skills not enabled, risk flags. Be specific to this business — no generic advice.]
 
 # 7. Recommendations — Improve the Persona
 
-[Bullet points covering: greeting quality for voice, FAQ answer quality review, non-determinism risks, what persona should always/never say, demo wow moments]
+[Bullet points covering: greeting quality for voice, FAQ answer quality review, non-determinism risks, what the persona should always/never say, demo wow moments specific to this business]
+
+# 8. AIR vs. AIR Pro — The Maturity Curve
+
+This section is for the SE to use during the discovery conversation. Present it after walking through the configuration.
+
+## The One Analogy That Explains Everything
+
+| | AIR — The Receptionist on Day 1 | AIR Pro — The Seasoned Employee |
+|---|---|---|
+| **What she does** | Greets callers, routes to the right person, answers common questions, sends texts, escalates what she can't handle | All of AIR, plus: completes multi-step tasks, authenticates and acts on behalf of callers, handles complex workflow routing, adapts without a script |
+| **How she works** | Needs clear instructions to behave consistently — works from the training you gave her | Deep institutional knowledge — knows when to escalate vs. resolve without being told |
+| **Best for** | Day 1 deployment — get value immediately with minimal setup | Complex workflows that require judgment, authentication, or multi-turn task completion |
+
+*"AIR is your new receptionist on Day 1 — eager, capable, working from the training you gave her. AIR Pro is that same person after two years on the job. She doesn't need to be told what to do next. She already knows."*
+
+**The key insight:** The jump from AIR to AIR Pro isn't a different product — it's a maturity curve. Start with AIR, get value immediately, grow into AIR Pro as workflows get more complex. You don't replace the receptionist. You invest in her.
+
+## Call Reasons That AIR Handles Today vs. AIR Pro Tomorrow
+
+For THIS specific business, analyze each call reason and classify it:
+
+| Call Reason | AIR Today | AIR Pro Upgrade |
+|---|---|---|
+| [call reason from their list] | [what AIR does with it now] | [what AIR Pro would do better — multi-step completion, auth, workflow, etc.] |
+
+[Generate one row per call reason. Be specific about the AIR Pro capability that applies — don't use generic language.]
+
+## The Pitch Moment
+
+[Write 2-3 sentences the SE can say out loud right now, specific to this business's call reasons, explaining which workflows are ready for AIR Pro. This should feel like a natural next step in the conversation, not a sales close.]
 
 ---
 
